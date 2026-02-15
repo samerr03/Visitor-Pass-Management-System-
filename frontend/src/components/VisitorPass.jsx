@@ -1,7 +1,7 @@
-import React, { forwardRef } from 'react';
+import React from 'react';
 import QRCode from 'react-qr-code';
 
-const VisitorPass = forwardRef(({ visitor }, ref) => {
+const VisitorPass = ({ visitor, innerRef }) => {
     if (!visitor) return null;
 
     // Helper to process photo URL
@@ -32,24 +32,31 @@ const VisitorPass = forwardRef(({ visitor }, ref) => {
     };
 
     const photoUrl = getPhotoUrl(visitor.photo);
-    // console.log("Visitor Photo Input:", visitor.photo, "Output URL:", photoUrl); // Debug
+
+    // Helper for safe date formatting
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString();
+    };
+
+    const formatTime = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return isNaN(date.getTime()) ? 'Invalid Time' : date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
 
     return (
         <div className="w-full h-full flex justify-center items-center py-4 print:p-0 print:block print:w-auto print:h-auto">
-            {/* 
-                Print Container 
-                We use the ref here to capture strictly this card.
-                The card itself should have a fixed width on screen for the preview,
-                and be full width/fixed size when printing.
-            */}
+            {/* ... (rest of the wrapper) ... */}
             <div
-                ref={ref}
+                ref={innerRef}
                 className="
                     w-[320px] h-auto min-h-[500px]
                     bg-white border-2 border-slate-900 rounded-xl overflow-hidden relative 
                     shadow-2xl text-sm 
                     mx-auto
-                    print:w-[400px] print:h-[600px] print:fixed print:top-0 print:left-0 print:m-0 print:border-0 print:shadow-none print:z-[9999] print:page-break-after-always
+                    print:w-[320px] print:h-auto print:m-0 print:shadow-none print:border-2 print:border-slate-800
                 "
             >
                 {/* Header */}
@@ -77,10 +84,8 @@ const VisitorPass = forwardRef(({ visitor }, ref) => {
                                     alt="Visitor"
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                        // console.error("Image load failed:", photoUrl);
-                                        e.target.style.display = 'none'; // Hide broken image
-                                        e.target.nextSibling.style.display = 'block'; // Show fallback if we had one, but here we just rely on conditional rendering mostly.
-                                        // Actually, let's swap src to avatar if it fails
+                                        e.target.style.display = 'none';
+                                        e.target.nextSibling.style.display = 'block';
                                         e.target.src = `https://ui-avatars.com/api/?name=${visitor.name}&background=0D8ABC&color=fff`;
                                         e.target.style.display = 'block';
                                     }}
@@ -116,11 +121,11 @@ const VisitorPass = forwardRef(({ visitor }, ref) => {
                         </div>
                         <div>
                             <p className="text-[10px] text-slate-400 uppercase font-semibold">Entry Time</p>
-                            <p className="font-bold text-slate-700 text-xs">{new Date(visitor.entryTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                            <p className="font-bold text-slate-700 text-xs">{formatTime(visitor.entryTime)}</p>
                         </div>
                         <div>
                             <p className="text-[10px] text-slate-400 uppercase font-semibold">Date</p>
-                            <p className="font-bold text-slate-700 text-xs">{new Date(visitor.entryTime).toLocaleDateString()}</p>
+                            <p className="font-bold text-slate-700 text-xs">{formatDate(visitor.entryTime)}</p>
                         </div>
                     </div>
 
@@ -150,6 +155,6 @@ const VisitorPass = forwardRef(({ visitor }, ref) => {
             </div>
         </div>
     );
-});
+};
 
 export default VisitorPass;
