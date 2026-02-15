@@ -4,6 +4,7 @@ import { useReactToPrint } from 'react-to-print';
 import VisitorPass from '../components/VisitorPass';
 import ConfirmModal from '../components/ConfirmModal';
 import VisitorPassPrintable from '../components/VisitorPassPrintable';
+import PhotoCaptureModal from '../components/PhotoCaptureModal';
 
 const SecurityDashboard = () => {
     const [visitors, setVisitors] = useState([]);
@@ -23,13 +24,16 @@ const SecurityDashboard = () => {
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
+    // Webcam Modal State
+    const [showWebcamModal, setShowWebcamModal] = useState(false);
+
     // Confirmation Modal State
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [selectedVisitor, setSelectedVisitor] = useState(null);
     const [checkoutLoading, setCheckoutLoading] = useState(false);
 
     const printRef = useRef();
-    const componentRef = useRef(); // Keep for modal display if needed, though now we use VisitorPassPrintable for printing
+    const componentRef = useRef();
 
     const handlePrint = useReactToPrint({
         contentRef: printRef, // New syntax
@@ -59,16 +63,14 @@ const SecurityDashboard = () => {
     useEffect(() => {
         fetchActiveVisitors();
 
-        // Auto refresh request every 30s
         const interval = setInterval(() => {
             if (!searchTerm) fetchActiveVisitors();
         }, 30000);
 
         return () => clearInterval(interval);
-    }, [searchTerm]); // Re-fetch when search clear
+    }, [searchTerm]);
 
     useEffect(() => {
-        // Debounce search
         const delayDebounceFn = setTimeout(() => {
             if (searchTerm) {
                 searchActiveVisitors(searchTerm);
@@ -84,16 +86,30 @@ const SecurityDashboard = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setFormData({ ...formData, photo: file });
-            setPreview(URL.createObjectURL(file));
+    // Helper: Convert DataURI to File
+    const dataURLtoFile = (dataurl, filename) => {
+        let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
         }
+        return new File([u8arr], filename, { type: mime });
+    };
+
+    const handlePhotoCapture = (imageSrc) => {
+        const file = dataURLtoFile(imageSrc, 'visitor-photo.jpg');
+        setFormData({ ...formData, photo: file });
+        setPreview(imageSrc);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!formData.photo) {
+            setMsg('Error: Visitor photo is required.');
+            return;
+        }
+
         setLoading(true);
         setMsg('');
 
@@ -108,7 +124,6 @@ const SecurityDashboard = () => {
         }
 
         try {
-            // Need to set content type for file upload, but axios usually handles it with FormData
             const res = await api.post('/visitors', data, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
@@ -134,21 +149,19 @@ const SecurityDashboard = () => {
         }
     };
 
-    // Open Confirmation Modal
     const initiateCheckout = (visitor) => {
         setSelectedVisitor(visitor);
         setShowConfirmModal(true);
     };
 
-    // Execute Checkout
     const processCheckout = async (id) => {
         setCheckoutLoading(true);
         try {
             await api.put(`/visitors/${id}/checkout`);
-            fetchActiveVisitors(); // Refresh list
+            fetchActiveVisitors();
             setShowConfirmModal(false);
         } catch (err) {
-            alert('Error checking out'); // Fallback error
+            alert('Error checking out');
         } finally {
             setCheckoutLoading(false);
             setSelectedVisitor(null);
@@ -168,27 +181,30 @@ const SecurityDashboard = () => {
                             {msg && <div className={`p-3 mb-4 rounded text-sm font-medium ${msg.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{msg}</div>}
 
                             <form onSubmit={handleSubmit} className="space-y-4">
-                                {/* Photo Upload */}
-                                <div className="flex justify-center mb-4">
-                                    <div className="relative w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300 hover:border-blue-500 transition-colors cursor-pointer group">
+                                {/* Photo Capture Trigger */}
+                                <div className="flex flex-col items-center mb-4">
+                                    <div
+                                        onClick={() => setShowWebcamModal(true)}
+                                        className="relative w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300 hover:border-blue-500 transition-colors cursor-pointer group shadow-sm hover:shadow-md"
+                                        title="Click to capture photo"
+                                    >
                                         {preview ? (
                                             <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                                         ) : (
-                                            <div className="text-center p-2 text-gray-400 group-hover:text-blue-500">
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <div className="text-center p-2 text-gray-400 group-hover:text-blue-500 flex flex-col items-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                                                 </svg>
-                                                <span className="text-xs">Upload Photo</span>
+                                                <span className="text-xs font-semibold">Capture Photo*</span>
                                             </div>
                                         )}
-                                        <input
-                                            type="file"
-                                            accept="image/png, image/jpeg"
-                                            onChange={handleFileChange}
-                                            className="absolute inset-0 opacity-0 cursor-pointer"
-                                        />
+                                        {/* Camera Icon Overlay on Hover/Existing */}
+                                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                        </div>
                                     </div>
+                                    {!formData.photo && <span className="text-xs text-red-500 mt-1">* Photo required</span>}
                                 </div>
 
                                 <div>
@@ -217,7 +233,11 @@ const SecurityDashboard = () => {
                                     <input type="text" name="purpose" value={formData.purpose} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" placeholder="Meeting/Interview" />
                                 </div>
 
-                                <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-2.5 rounded hover:bg-blue-700 font-semibold shadow transition-colors disabled:bg-blue-400 flex items-center justify-center gap-2">
+                                <button
+                                    type="submit"
+                                    disabled={loading || !formData.photo}
+                                    className="w-full bg-blue-600 text-white py-2.5 rounded hover:bg-blue-700 font-semibold shadow transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
                                     {loading && (
                                         <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                     )}
@@ -294,6 +314,13 @@ const SecurityDashboard = () => {
                 <div style={{ position: "absolute", top: "-9999px", left: "-9999px" }}>
                     <VisitorPassPrintable ref={printRef} visitor={currentPass} />
                 </div>
+
+                {/* Webcam Capture Modal */}
+                <PhotoCaptureModal
+                    isOpen={showWebcamModal}
+                    onClose={() => setShowWebcamModal(false)}
+                    onCapture={handlePhotoCapture}
+                />
 
                 {/* Pass Generation Modal */}
                 {showPassModal && currentPass && (
