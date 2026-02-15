@@ -13,10 +13,12 @@ const SecurityDashboard = () => {
         name: '',
         phone: '',
         purpose: '',
+        idProofType: 'Aadhar', // Default
         idProofNumber: '',
         personToMeet: '',
         photo: null // Add photo state
     });
+
     const [preview, setPreview] = useState(null); // Image preview url
     const [msg, setMsg] = useState('');
     const [showPassModal, setShowPassModal] = useState(false);
@@ -44,9 +46,15 @@ const SecurityDashboard = () => {
     const fetchActiveVisitors = async () => {
         try {
             const res = await api.get('/visitors?status=active');
-            setActiveVisitors(res.data);
+            if (Array.isArray(res.data)) {
+                setActiveVisitors(res.data);
+            } else {
+                setActiveVisitors([]);
+                console.error("API did not return an array", res.data);
+            }
         } catch (err) {
             console.error(err);
+            setActiveVisitors([]);
         }
     };
 
@@ -54,9 +62,14 @@ const SecurityDashboard = () => {
     const searchActiveVisitors = async (keyword) => {
         try {
             const res = await api.get(`/visitors?status=active&keyword=${keyword}`);
-            setActiveVisitors(res.data);
+            if (Array.isArray(res.data)) {
+                setActiveVisitors(res.data);
+            } else {
+                setActiveVisitors([]);
+            }
         } catch (err) {
             console.error(err);
+            setActiveVisitors([]);
         }
     };
 
@@ -81,9 +94,32 @@ const SecurityDashboard = () => {
 
         return () => clearTimeout(delayDebounceFn);
     }, [searchTerm]);
-
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        if (name === 'phone') {
+            // Only allow numbers and max 10 digits
+            if (/^\d{0,10}$/.test(value)) {
+                setFormData(prev => ({ ...prev, [name]: value }));
+            }
+        } else if (name === 'idProofNumber') {
+            if (formData.idProofType === 'Aadhar') {
+                // Aadhar: Numbers only, max 12
+                if (/^\d{0,12}$/.test(value)) {
+                    setFormData(prev => ({ ...prev, [name]: value }));
+                }
+            } else {
+                // DL: Alphanumeric + spaces, max 16
+                if (/^[a-zA-Z0-9 ]{0,16}$/.test(value)) {
+                    setFormData(prev => ({ ...prev, [name]: value.toUpperCase() })); // Auto-uppercase for DL
+                }
+            }
+        } else if (name === 'idProofType') {
+            // Reset number when type changes to prevent invalid states
+            setFormData(prev => ({ ...prev, [name]: value, idProofNumber: '' }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     // Helper: Convert DataURI to File
@@ -104,6 +140,16 @@ const SecurityDashboard = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (formData.phone.length !== 10) {
+            setMsg('Error: Phone number must be exactly 10 digits.');
+            return;
+        }
+
+        if (formData.idProofType === 'Aadhar' && formData.idProofNumber.length !== 12) {
+            setMsg('Error: Aadhar number must be exactly 12 digits.');
+            return;
+        }
 
         if (!formData.photo) {
             setMsg('Error: Visitor photo is required.');
@@ -133,6 +179,7 @@ const SecurityDashboard = () => {
                 name: '',
                 phone: '',
                 purpose: '',
+                idProofType: 'Aadhar',
                 idProofNumber: '',
                 personToMeet: '',
                 photo: null
@@ -212,14 +259,47 @@ const SecurityDashboard = () => {
                                     <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="John Doe" />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                {/* Phone Number */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone*</label>
+                                    <input
+                                        type="text"
+                                        name="phone"
+                                        value={formData.phone}
+                                        onChange={handleChange}
+                                        required
+                                        maxLength={10}
+                                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                                        placeholder="10-digit number"
+                                    />
+                                </div>
+
+                                {/* ID Proof Section */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone*</label>
-                                        <input type="text" name="phone" value={formData.phone} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" placeholder="98765..." />
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">ID Proof Type*</label>
+                                        <select
+                                            name="idProofType"
+                                            value={formData.idProofType}
+                                            onChange={handleChange}
+                                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="Aadhar">Aadhar Card</option>
+                                            <option value="Driving License">Driving License</option>
+                                        </select>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">ID Proof No.*</label>
-                                        <input type="text" name="idProofNumber" value={formData.idProofNumber} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" placeholder="Aadhar/DL" />
+                                        <input
+                                            type="text"
+                                            name="idProofNumber"
+                                            value={formData.idProofNumber}
+                                            onChange={handleChange}
+                                            required
+                                            maxLength={formData.idProofType === 'Aadhar' ? 12 : 16}
+                                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                                            placeholder={formData.idProofType === 'Aadhar' ? "12-digit Number" : "KA01 2010 0012345"}
+                                        />
                                     </div>
                                 </div>
 
@@ -275,7 +355,7 @@ const SecurityDashboard = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
-                                        {activeVisitors.map((visitor) => (
+                                        {Array.isArray(activeVisitors) && activeVisitors.map((visitor) => (
                                             <tr key={visitor._id} className="hover:bg-blue-50 transition-colors">
                                                 <td className="p-3 font-mono text-sm text-blue-600">{visitor.passId}</td>
                                                 <td className="p-3">
