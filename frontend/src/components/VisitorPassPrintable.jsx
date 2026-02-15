@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import QRCode from 'react-qr-code';
+import logo from '../assets/logo.svg';
 
 const VisitorPassPrintable = forwardRef(({ visitor }, ref) => {
     // Helper for safe date formatting
@@ -54,14 +55,23 @@ const VisitorPassPrintable = forwardRef(({ visitor }, ref) => {
     const photoUrl = getPhotoUrl(visitor.photo);
 
     return (
-        <div ref={ref} className="print-area w-[320px] mx-auto bg-white border border-slate-900 rounded-xl overflow-hidden relative text-sm p-0">
+        <div ref={ref} className="print-area w-[400px] mx-auto bg-white border border-slate-900 rounded-xl overflow-hidden relative text-sm p-0">
 
             {/* Header */}
-            <div className="bg-slate-900 text-white p-4 text-center print-color-adjust-exact webkit-print-color-adjust-exact">
-                <div className="flex items-center justify-center gap-3 mb-1">
-                    <h1 className="text-xl font-bold tracking-wider uppercase">Visitor Pass</h1>
+            <div className="bg-slate-900 text-white p-4 text-center print-color-adjust-exact webkit-print-color-adjust-exact relative">
+                {/* Logo - Absolute Positioned */}
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-md flex items-center justify-center p-1 shadow-sm">
+                    <img
+                        src={logo}
+                        alt="Logo"
+                        className="w-full h-full object-contain"
+                    />
                 </div>
-                <p className="text-slate-400 text-[10px] tracking-widest uppercase">SafeEntry Systems</p>
+
+                <div className="flex items-center justify-center gap-3 mb-1">
+                    <h1 className="text-xl font-bold tracking-wider uppercase pl-12">Visitor Pass</h1>
+                </div>
+                <p className="text-slate-400 text-[10px] tracking-widest uppercase pl-12">SafeEntry Systems</p>
             </div>
 
             {/* Content */}
