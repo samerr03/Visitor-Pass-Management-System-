@@ -1,0 +1,177 @@
+const User = require('../models/User');
+const Visitor = require('../models/Visitor');
+
+// @desc    Register a new staff member (security)
+// @route   POST /api/admin/create-security
+// @access  Private/Admin
+const createSecurityUser = async (req, res, next) => {
+    try {
+        console.log('createSecurityUser Request Body:', req.body);
+        console.log('createSecurityUser Request File:', req.file);
+        const { name, email, password, phone, designation, role } = req.body;
+
+        const userExists = await User.findOne({ email });
+
+        if (userExists) {
+            // Delete uploaded file if user exists to avoid clutter
+            if (req.file) {
+                const fs = require('fs');
+                fs.unlinkSync(req.file.path);
+            }
+            return res.status(400).json({
+                message: 'User already exists'
+            });
+        }
+
+        // Generate Staff ID: STF + Year + Random 4 digits (e.g., STF20241023)
+        // Or simpler: STF-timestamp specific
+        const year = new Date().getFullYear();
+        const random = Math.floor(1000 + Math.random() * 9000);
+        const staffId = `STF${year}${random}`;
+
+        // Handle Photo path
+        let photo = '';
+        if (req.file) {
+            // Store relative path
+            photo = `uploads/${req.file.filename}`;
+        }
+
+        const user = await User.create({
+            name,
+            email,
+            password,
+            phone,
+            designation: designation || 'Security Staff',
+            role: role || 'security',
+            staffId,
+            photo,
+            isActive: true
+        });
+
+        return res.status(201).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            staffId: user.staffId,
+            staffId: user.staffId,
+            photo: user.photo,
+            photoUrl: user.photo ? `${process.env.BASE_URL || 'http://localhost:5000'}/${user.photo.replace(/\\/g, '/')}` : null
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+// @desc    Delete a user
+// @route   DELETE /api/admin/user/:id
+// @access  Private/Admin
+const deleteUser = async (req, res) => {
+    const user = await User.findById(req.params.id);
+
+    if (user) {
+        if (user.role === 'admin') {
+            res.status(400);
+            throw new Error('Cannot delete admin user');
+        }
+
+        // Delete photo file if exists
+        if (user.photo) {
+            const fs = require('fs');
+            const path = require('path');
+            const filePath = path.join(__dirname, '..', user.photo);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+
+        await User.deleteOne({ _id: req.params.id });
+        res.json({ message: 'User removed' });
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+};
+
+// @desc    Get dashboard stats
+// @route   GET /api/admin/dashboard
+// @access  Private/Admin
+const getDashboardStats = async (req, res) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const totalVisitorsToday = await Visitor.countDocuments({
+        createdAt: { $gte: today },
+    });
+
+    const activePasses = await Visitor.countDocuments({ status: 'active' });
+    const completedVisits = await Visitor.countDocuments({ status: 'completed' });
+    const totalSecurityStaff = await User.countDocuments({ role: 'security' });
+
+    res.json({
+        totalVisitorsToday,
+        activePasses,
+        completedVisits,
+        totalSecurityStaff,
+    });
+};
+
+// @desc    Get all visitors with pagination
+// @route   GET /api/admin/visitors
+// @access  Private/Admin
+const getAllVisitors = async (req, res) => {
+    const pageSize = 10;
+    const page = Number(req.query.page) || 1;
+
+    const count = await Visitor.countDocuments({});
+    const visitors = await Visitor.find({})
+        .populate('createdBy', 'name')
+        .limit(pageSize)
+        .skip(pageSize * (page - 1))
+        .sort({ createdAt: -1 });
+
+    res.json({
+        visitors,
+        page,
+        pages: Math.ceil(count / pageSize),
+    });
+};
+
+// @desc    Search visitors
+// @route   GET /api/admin/visitors/search
+// @access  Private/Admin
+const searchVisitors = async (req, res) => {
+    const keyword = req.query.keyword
+        ? {
+            $or: [
+                { name: { $regex: req.query.keyword, $options: 'i' } },
+                { phone: { $regex: req.query.keyword, $options: 'i' } },
+            ],
+        }
+        : {};
+
+    const visitors = await Visitor.find({ ...keyword }).populate('createdBy', 'name');
+    res.json(visitors);
+};
+
+// @desc    Get all staff (admin + security)
+// @route   GET /api/admin/security-users
+// @access  Private/Admin
+const getSecurityUsers = async (req, res) => {
+    // get all users except the one making the request (optional, but good practice). 
+    // For now, let's return all so they can see themselves too.
+    // Or just all users.
+    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
+    res.json(users);
+};
+
+module.exports = {
+    createSecurityUser,
+    deleteUser,
+    getDashboardStats,
+    getAllVisitors,
+    searchVisitors,
+    getSecurityUsers,
+};

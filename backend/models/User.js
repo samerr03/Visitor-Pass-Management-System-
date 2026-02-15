@@ -1,0 +1,65 @@
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+
+const userSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    password: {
+        type: String,
+        required: true,
+    },
+    role: {
+        type: String,
+        enum: ['admin', 'security'],
+        default: 'security',
+    },
+    staffId: {
+        type: String,
+        unique: true,
+        sparse: true, // Allows null for validation if not set immediately, though we will set it.
+    },
+    photo: {
+        type: String, // URL to photo
+    },
+    phone: {
+        type: String,
+    },
+    designation: {
+        type: String,
+        default: 'Security Staff',
+    },
+    isActive: {
+        type: Boolean,
+        default: true,
+    },
+    lastLogin: {
+        type: Date,
+    },
+    refreshToken: {
+        type: String,
+    },
+}, { timestamps: true });
+
+// Hash password before saving
+// Hash password before saving
+userSchema.pre('save', async function () {
+    if (!this.isModified('password')) {
+        return;
+    }
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+});
+
+// Match password
+userSchema.methods.matchPassword = async function (enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
+};
+
+module.exports = mongoose.model('User', userSchema);
