@@ -11,6 +11,13 @@ const PhotoCaptureModal = ({ isOpen, onClose, onCapture }) => {
         facingMode: "user"
     };
 
+    // Reset state when modal opens
+    React.useEffect(() => {
+        if (isOpen) {
+            setImageSrc(null);
+        }
+    }, [isOpen]);
+
     const capture = useCallback(() => {
         const image = webcamRef.current.getScreenshot();
         setImageSrc(image);
