@@ -7,6 +7,7 @@ const path = require('path'); // Added for path resolution
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const visitorRoutes = require("./routes/visitorRoutes");
+const auditRoutes = require("./routes/auditRoutes");
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use(cors({
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/visitors", visitorRoutes);
+app.use("/api/audit-logs", auditRoutes);
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

@@ -31,4 +31,7 @@ router.route('/:id/checkout')
 router.route('/:id/exit')
     .patch(protect, authorize('security'), markExit);
 
+router.route('/:id')
+    .delete(protect, authorize('admin'), require('../controllers/visitorController').deleteVisitor);
+
 module.exports = router;

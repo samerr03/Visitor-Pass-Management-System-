@@ -1,5 +1,6 @@
 const Visitor = require('../models/Visitor');
 const generatePassId = require('../utils/generatePassId');
+const logAction = require('../utils/logger');
 
 // @desc    Get all visitors with filtering and search
 // @route   GET /api/visitors
@@ -75,6 +76,9 @@ const createVisitor = async (req, res, next) => {
             createdBy: req.user._id,
         });
 
+        // Audit Log
+        await logAction(req, 'ENTRY', visitor, 'Visitor Check-in Created');
+
         res.status(201).json(visitor);
     } catch (error) {
         next(error);
@@ -100,7 +104,35 @@ const markExit = async (req, res, next) => {
         visitor.status = 'completed';
         await visitor.save();
 
+        // Audit Log
+        await logAction(req, 'EXIT', visitor, 'Visitor Check-out Processed');
+
         res.json(visitor);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Delete visitor
+// @route   DELETE /api/visitors/:id
+// @access  Private/Admin
+const deleteVisitor = async (req, res, next) => {
+    try {
+        const visitor = await Visitor.findById(req.params.id);
+
+        if (!visitor) {
+            return res.status(404).json({ message: 'Visitor not found' });
+        }
+
+        // Store visitor data for log before deletion
+        const visitorData = { ...visitor.toObject() };
+
+        await visitor.deleteOne();
+
+        // Audit Log
+        await logAction(req, 'DELETE', visitorData, 'Visitor Record Deleted');
+
+        res.json({ message: 'Visitor removed' });
     } catch (error) {
         next(error);
     }
@@ -130,4 +162,5 @@ module.exports = {
     markExit,
     getTodaysVisitors,
     getVisitorByPassId,
+    deleteVisitor
 };

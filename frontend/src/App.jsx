@@ -8,6 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import StaffProfile from './pages/StaffProfile';
 import MyIDCard from './pages/MyIDCard';
+import AuditLogs from './pages/AuditLogs';
 import { AuthProvider } from './context/AuthContext';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
 
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']} />}>
                 <Route index element={<AdminDashboard />} />
+                <Route path="audit-logs" element={<AuditLogs />} />
               </Route>
 
               <Route path="/security" element={<ProtectedRoute allowedRoles={['security']} />}>
