@@ -18,6 +18,8 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/admin/login" element={<Login role="admin" />} />
+          <Route path="/security/login" element={<Login role="security" />} />
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import useAuth from '../hooks/useAuth';
 import logo from '../assets/logo-dark.svg'; // Import ZenZ Logo
 
-const Login = () => {
+const Login = ({ role }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -12,9 +12,9 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [focusedField, setFocusedField] = useState(null);
 
-    // Get role from URL query params
+    // Get role from props OR URL query params
     const [searchParams] = useSearchParams();
-    const roleParam = searchParams.get('role'); // 'admin' or 'security'
+    const roleParam = role || searchParams.get('role'); // 'admin' or 'security'
 
     if (!roleParam) {
         return <Navigate to="/" replace />;
