@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useAuth from '../hooks/useAuth';
 import logo from '../assets/logo-dark.svg'; // Import ZenZ Logo
@@ -16,11 +16,15 @@ const Login = () => {
     const [searchParams] = useSearchParams();
     const roleParam = searchParams.get('role'); // 'admin' or 'security'
 
+    if (!roleParam) {
+        return <Navigate to="/" replace />;
+    }
+
     const { login, logout } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
-        logout();
+        logout(false);
     }, [roleParam]);
 
     const getTitle = () => {

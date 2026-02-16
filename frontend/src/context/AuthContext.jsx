@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
 const AuthContext = createContext();
@@ -22,7 +23,9 @@ export const AuthProvider = ({ children }) => {
         return res.data;
     };
 
-    const logout = async () => {
+    const navigate = useNavigate();
+
+    const logout = async (shouldRedirect = true) => {
         try {
             await api.post('/auth/logout');
         } catch (err) {
@@ -31,6 +34,9 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setUser(null);
+        if (shouldRedirect) {
+            navigate('/', { replace: true });
+        }
     };
 
     return (

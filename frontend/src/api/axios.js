@@ -32,7 +32,8 @@ api.interceptors.response.use(
             } catch (err) {
                 // Refresh token failed, logout user
                 localStorage.removeItem('token');
-                window.location.href = '/login';
+                localStorage.removeItem('user');
+                window.location.href = '/';
             }
         }
         return Promise.reject(error);
