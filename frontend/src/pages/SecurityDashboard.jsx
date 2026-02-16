@@ -5,6 +5,19 @@ import VisitorPass from '../components/VisitorPass';
 import ConfirmModal from '../components/ConfirmModal';
 import VisitorPassPrintable from '../components/VisitorPassPrintable';
 import PhotoCaptureModal from '../components/PhotoCaptureModal';
+import {
+    Camera,
+    User,
+    Phone,
+    FileText,
+    Users,
+    LogOut,
+    Search,
+    CheckCircle,
+    AlertCircle,
+    CreditCard,
+    Loader2
+} from 'lucide-react';
 
 const SecurityDashboard = () => {
     const [visitors, setVisitors] = useState([]);
@@ -215,171 +228,287 @@ const SecurityDashboard = () => {
         }
     };
 
+    const isFormValid = formData.name && formData.phone.length === 10 && formData.purpose && formData.personToMeet && formData.idProofNumber && formData.photo;
+
     return (
-        <>
-            <div className="p-6">
-                <h1 className="text-3xl font-bold mb-6 text-gray-800">Security Dashboard</h1>
+        <div className="min-h-screen bg-slate-50/50 p-6 md:p-8">
+            <div className="max-w-7xl mx-auto space-y-8">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Security Console</h1>
+                        <p className="text-slate-500 text-sm mt-1">Manage visitor entries and exits</p>
+                    </div>
+                    <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span className="text-sm font-medium text-slate-700">System Online</span>
+                    </div>
+                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* Create Pass Form */}
-                    <div className="lg:col-span-4 h-fit">
-                        <div className="bg-white p-6 rounded-lg shadow-md sticky top-6">
-                            <h2 className="text-xl font-bold mb-4 text-blue-700 border-b pb-2">New Visitor Entry</h2>
-                            {msg && <div className={`p-3 mb-4 rounded text-sm font-medium ${msg.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{msg}</div>}
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+                    {/* Left Col: Entry Form */}
+                    <div className="xl:col-span-4">
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden sticky top-6">
+                            <div className="p-5 border-b border-slate-100 bg-slate-50/50">
+                                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    <User className="w-5 h-5 text-indigo-600" />
+                                    New Visitor Entry
+                                </h2>
+                            </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                {/* Photo Capture Trigger */}
-                                <div className="flex flex-col items-center mb-4">
-                                    <div
-                                        onClick={() => setShowWebcamModal(true)}
-                                        className="relative w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300 hover:border-blue-500 transition-colors cursor-pointer group shadow-sm hover:shadow-md"
-                                        title="Click to capture photo"
-                                    >
-                                        {preview ? (
-                                            <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="text-center p-2 text-gray-400 group-hover:text-blue-500 flex flex-col items-center">
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                </svg>
-                                                <span className="text-xs font-semibold">Capture Photo*</span>
+                            <div className="p-6">
+                                {msg && (
+                                    <div className={`p-3 mb-6 rounded-lg text-sm font-medium flex items-center gap-2 ${msg.includes('Error') ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                        }`}>
+                                        {msg.includes('Error') ? <AlertCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                                        {msg}
+                                    </div>
+                                )}
+
+                                <form onSubmit={handleSubmit} className="space-y-5">
+                                    {/* Photo Capture Area */}
+                                    <div className="flex flex-col items-center justify-center mb-2">
+                                        <div
+                                            onClick={() => setShowWebcamModal(true)}
+                                            className={`relative w-32 h-32 rounded-full cursor-pointer transition-all duration-300 group ${preview
+                                                ? 'ring-4 ring-emerald-500/20'
+                                                : formData.phone && !formData.photo // "Missing photo" state (touched logic simplified)
+                                                    ? 'bg-red-50 border-2 border-dashed border-red-300 hover:bg-red-100'
+                                                    : 'bg-slate-50 border-2 border-dashed border-slate-300 hover:border-indigo-400 hover:bg-indigo-50'
+                                                }`}
+                                        >
+                                            <div className="w-full h-full rounded-full overflow-hidden flex items-center justify-center relative">
+                                                {preview ? (
+                                                    <>
+                                                        <img src={preview} alt="Visitor" className="w-full h-full object-cover" />
+                                                        <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <Camera className="w-8 h-8 text-white mb-1" />
+                                                            <span className="text-xs text-white font-medium">Retake</span>
+                                                        </div>
+                                                        <div className="absolute bottom-1 right-1 bg-emerald-500 text-white p-1 rounded-full shadow-md border-2 border-white">
+                                                            <CheckCircle className="w-3 h-3" />
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <div className="flex flex-col items-center text-slate-400 group-hover:text-indigo-500 transition-colors">
+                                                        <Camera className={`w-8 h-8 mb-1 ${formData.phone && !formData.photo ? 'text-red-400' : ''}`} />
+                                                        <span className={`text-[10px] font-semibold uppercase tracking-wide ${formData.phone && !formData.photo ? 'text-red-500' : ''}`}>
+                                                            {formData.phone && !formData.photo ? 'Required' : 'Photo'}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                        {/* Camera Icon Overlay on Hover/Existing */}
-                                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                        </div>
+                                        <span className="text-xs text-slate-400 mt-2 font-medium">Click to capture visitor photo</span>
+                                    </div>
+
+                                    {/* Form Fields */}
+                                    <div className="space-y-4">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Full Name</label>
+                                            <div className="relative">
+                                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                                <input
+                                                    type="text"
+                                                    name="name"
+                                                    value={formData.name}
+                                                    onChange={handleChange}
+                                                    placeholder="Enter visitor name"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Phone Number</label>
+                                            <div className="relative">
+                                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                                <input
+                                                    type="tel"
+                                                    name="phone"
+                                                    value={formData.phone}
+                                                    onChange={handleChange}
+                                                    placeholder="10-digit mobile number"
+                                                    maxLength={10}
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400 font-mono"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">ID Type</label>
+                                                <div className="relative">
+                                                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                                    <select
+                                                        name="idProofType"
+                                                        value={formData.idProofType}
+                                                        onChange={handleChange}
+                                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all appearance-none cursor-pointer text-slate-700"
+                                                    >
+                                                        <option value="Aadhar">Aadhar</option>
+                                                        <option value="Driving License">License</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">ID Number</label>
+                                                <input
+                                                    type="text"
+                                                    name="idProofNumber"
+                                                    value={formData.idProofNumber}
+                                                    onChange={handleChange}
+                                                    placeholder="XXXX XXXX XXXX"
+                                                    maxLength={formData.idProofType === 'Aadhar' ? 12 : 16}
+                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400 font-mono"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Meeting With</label>
+                                            <div className="relative">
+                                                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                                <input
+                                                    type="text"
+                                                    name="personToMeet"
+                                                    value={formData.personToMeet}
+                                                    onChange={handleChange}
+                                                    placeholder="Employee name"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
+                                                    required
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Purpose</label>
+                                            <div className="relative">
+                                                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                                <input
+                                                    type="text"
+                                                    name="purpose"
+                                                    value={formData.purpose}
+                                                    onChange={handleChange}
+                                                    placeholder="e.g. Interview, Delivery"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
+                                                    required
+                                                />
+                                            </div>
                                         </div>
                                     </div>
-                                    {!formData.photo && <span className="text-xs text-red-500 mt-1">* Photo required</span>}
-                                </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Visitor Name*</label>
-                                    <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="John Doe" />
-                                </div>
-
-                                {/* Phone Number */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone*</label>
-                                    <input
-                                        type="text"
-                                        name="phone"
-                                        value={formData.phone}
-                                        onChange={handleChange}
-                                        required
-                                        maxLength={10}
-                                        className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                                        placeholder="10-digit number"
-                                    />
-                                </div>
-
-                                {/* ID Proof Section */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">ID Proof Type*</label>
-                                        <select
-                                            name="idProofType"
-                                            value={formData.idProofType}
-                                            onChange={handleChange}
-                                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            <option value="Aadhar">Aadhar Card</option>
-                                            <option value="Driving License">Driving License</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">ID Proof No.*</label>
-                                        <input
-                                            type="text"
-                                            name="idProofNumber"
-                                            value={formData.idProofNumber}
-                                            onChange={handleChange}
-                                            required
-                                            maxLength={formData.idProofType === 'Aadhar' ? 12 : 16}
-                                            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                                            placeholder={formData.idProofType === 'Aadhar' ? "12-digit Number" : "KA01 2010 0012345"}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Person to Meet*</label>
-                                    <input type="text" name="personToMeet" value={formData.personToMeet} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" placeholder="Employee Name" />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Purpose*</label>
-                                    <input type="text" name="purpose" value={formData.purpose} onChange={handleChange} required className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" placeholder="Meeting/Interview" />
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={loading || !formData.photo}
-                                    className="w-full bg-blue-600 text-white py-2.5 rounded hover:bg-blue-700 font-semibold shadow transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                >
-                                    {loading && (
-                                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    )}
-                                    {loading ? 'Generating...' : 'Generate Pass & Check-in'}
-                                </button>
-                            </form>
+                                    <button
+                                        type="submit"
+                                        disabled={loading || !isFormValid}
+                                        className="w-full bg-indigo-600 text-white py-3 rounded-xl hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-200 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2 mt-2"
+                                    >
+                                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <div className="w-5 h-5" />}
+                                        {loading ? 'Processing...' : 'Generate Pass & Check-In'}
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Active Visitors List */}
-                    <div className="lg:col-span-8">
-                        <div className="bg-white p-6 rounded-lg shadow-md">
-                            <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                                <h2 className="text-xl font-bold text-gray-800">Active Visitors ({activeVisitors.length})</h2>
-                                <div className="w-full sm:w-64">
+                    {/* Right Col: Active Visitors Table */}
+                    <div className="xl:col-span-8">
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col min-h-[600px]">
+                            <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+                                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 text-xs">{activeVisitors.length}</span>
+                                    Active Visitors
+                                </h2>
+                                <div className="relative w-full sm:w-72">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                     <input
                                         type="text"
-                                        placeholder="Search by name, phone or ID..."
+                                        placeholder="Search active visitors..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm transition-all"
                                     />
                                 </div>
                             </div>
 
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto flex-1">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
-                                        <tr className="bg-gray-50 border-b-2 border-gray-100">
-                                            <th className="p-3 text-sm font-semibold text-gray-600">Pass ID</th>
-                                            <th className="p-3 text-sm font-semibold text-gray-600">Visitor</th>
-                                            <th className="p-3 text-sm font-semibold text-gray-600">Meeting</th>
-                                            <th className="p-3 text-sm font-semibold text-gray-600">Check-In</th>
-                                            <th className="p-3 text-sm font-semibold text-gray-600 text-center">Action</th>
+                                        <tr className="bg-slate-50/50 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                            <th className="px-6 py-4">Visitor</th>
+                                            <th className="px-6 py-4">Pass ID</th>
+                                            <th className="px-6 py-4">Meeting</th>
+                                            <th className="px-6 py-4">Status</th>
+                                            <th className="px-6 py-4 text-right">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {Array.isArray(activeVisitors) && activeVisitors.map((visitor) => (
-                                            <tr key={visitor._id} className="hover:bg-blue-50 transition-colors">
-                                                <td className="p-3 font-mono text-sm text-blue-600">{visitor.passId}</td>
-                                                <td className="p-3">
-                                                    <div className="font-medium text-gray-900">{visitor.name}</div>
-                                                    <div className="text-xs text-gray-500">{visitor.phone}</div>
-                                                </td>
-                                                <td className="p-3 text-sm text-gray-700">{visitor.personToMeet}</td>
-                                                <td className="p-3 text-sm text-gray-500">
-                                                    {new Date(visitor.entryTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                </td>
-                                                <td className="p-3 text-center">
-                                                    <button
-                                                        onClick={() => initiateCheckout(visitor)}
-                                                        className="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded text-sm font-medium transition-colors"
-                                                    >
-                                                        Check Out
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                        {activeVisitors.length === 0 && (
+                                    <tbody className="divide-y divide-slate-100">
+                                        {activeVisitors.length > 0 ? (
+                                            activeVisitors.map((visitor) => (
+                                                <tr key={visitor._id} className="hover:bg-slate-50/50 transition-colors group">
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+                                                                {visitor.photo ? (
+                                                                    <img src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}/${visitor.photo}`} alt={visitor.name} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <User className="w-5 h-5 text-slate-400" />
+                                                                )}
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-slate-800 text-sm group-hover:text-indigo-600 transition-colors">{visitor.name}</p>
+                                                                <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
+                                                                    <Phone className="w-3 h-3" />
+                                                                    {visitor.phone}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="font-mono text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">
+                                                            {visitor.passId}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm text-slate-700 font-medium">{visitor.personToMeet}</div>
+                                                        <div className="text-xs text-slate-500 mt-0.5">{visitor.purpose}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider">
+                                                            <span className="relative flex h-2 w-2">
+                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                                            </span>
+                                                            Inside
+                                                        </div>
+                                                        <div className="text-[10px] text-slate-400 mt-1 pl-1">
+                                                            In: {new Date(visitor.entryTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <button
+                                                            onClick={() => initiateCheckout(visitor)}
+                                                            className="text-red-500 hover:text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-end gap-1 ml-auto"
+                                                        >
+                                                            <LogOut className="w-4 h-4" />
+                                                            Check Out
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
                                             <tr>
-                                                <td colSpan="5" className="p-8 text-center text-gray-400">
-                                                    No active visitors found.
+                                                <td colSpan="5">
+                                                    <div className="h-64 flex flex-col items-center justify-center text-slate-400">
+                                                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                                                            <Users className="w-8 h-8 opacity-20" />
+                                                        </div>
+                                                        <p className="text-sm font-medium">Visitors will appear here once checked-in.
+                                                        </p>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         )}
@@ -404,34 +533,37 @@ const SecurityDashboard = () => {
 
                 {/* Pass Generation Modal */}
                 {showPassModal && currentPass && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in no-print">
-                        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full flex flex-col max-h-[90vh] overflow-hidden transform transition-all scale-100">
+                    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in no-print">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full flex flex-col max-h-[90vh] overflow-hidden transform transition-all scale-100 ring-1 ring-slate-900/5">
                             {/* Modal Header */}
-                            <div className="p-4 bg-slate-50 border-b flex justify-between items-center shrink-0">
-                                <h3 className="text-lg font-bold text-slate-800">Pass Generated Successfully</h3>
-                                <button onClick={() => setShowPassModal(false)} className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50">
+                            <div className="p-4 border-b border-slate-100 flex justify-between items-center shrink-0 bg-slate-50/50">
+                                <div className="flex items-center gap-2 text-emerald-600">
+                                    <CheckCircle className="w-5 h-5 fill-emerald-100" />
+                                    <h3 className="text-lg font-bold text-slate-800">Pass Generated</h3>
+                                </div>
+                                <button onClick={() => setShowPassModal(false)} className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
                             </div>
 
                             {/* Modal Body - Scrollable if needed */}
-                            <div className="p-6 bg-slate-200 overflow-y-auto flex-1 flex items-center justify-center">
+                            <div className="p-6 bg-slate-100 overflow-y-auto flex-1 flex items-center justify-center">
                                 {/* Display Component (Not for printing) */}
                                 <VisitorPass innerRef={componentRef} visitor={currentPass} />
                             </div>
 
                             {/* Modal Footer */}
-                            <div className="p-4 bg-white border-t flex gap-3 shrink-0">
+                            <div className="p-4 bg-white border-t border-slate-100 flex gap-3 shrink-0">
                                 <button
                                     onClick={handlePrint}
-                                    className="flex-1 bg-slate-900 text-white py-2.5 rounded-lg hover:bg-black font-semibold shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-[1.02]"
+                                    className="flex-1 bg-slate-900 text-white py-2.5 rounded-xl hover:bg-slate-800 font-semibold shadow-lg shadow-slate-200 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                                     Print Pass
                                 </button>
                                 <button
                                     onClick={() => setShowPassModal(false)}
-                                    className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                                    className="flex-1 border border-slate-200 text-slate-700 py-2.5 rounded-xl hover:bg-slate-50 font-medium transition-colors"
                                 >
                                     Close
                                 </button>
@@ -452,18 +584,18 @@ const SecurityDashboard = () => {
                     loading={checkoutLoading}
                 >
                     {selectedVisitor && (
-                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 flex flex-col gap-1 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-gray-500 font-medium">Visitor Name:</span>
-                                <span className="text-gray-900 font-bold">{selectedVisitor.name}</span>
+                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 flex flex-col gap-2 text-sm mt-2">
+                            <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                                <span className="text-slate-500 font-medium">Visitor Name</span>
+                                <span className="text-slate-900 font-bold text-base">{selectedVisitor.name}</span>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-500 font-medium">Pass ID:</span>
-                                <span className="text-blue-600 font-mono font-bold">{selectedVisitor.passId}</span>
+                            <div className="flex justify-between items-center">
+                                <span className="text-slate-500 font-medium">Pass ID</span>
+                                <span className="font-mono text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded">{selectedVisitor.passId}</span>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-500 font-medium">Check-in Time:</span>
-                                <span className="text-gray-700">
+                            <div className="flex justify-between items-center">
+                                <span className="text-slate-500 font-medium">Check-in Time</span>
+                                <span className="text-slate-700 font-medium">
                                     {new Date(selectedVisitor.entryTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                             </div>
@@ -471,7 +603,7 @@ const SecurityDashboard = () => {
                     )}
                 </ConfirmModal>
             </div>
-        </>
+        </div>
     );
 };
 
