@@ -122,20 +122,30 @@ const getDashboardStats = async (req, res) => {
 // @route   GET /api/admin/visitors
 // @access  Private/Admin
 const getAllVisitors = async (req, res) => {
-    const pageSize = 10;
     const page = Number(req.query.page) || 1;
+    let pageSize = 10;
+
+    if (req.query.limit === 'all') {
+        pageSize = 0; // 0 usually means no limit in some logics, but let's handle it explicitly
+    } else if (req.query.limit) {
+        pageSize = Number(req.query.limit);
+    }
 
     const count = await Visitor.countDocuments({});
-    const visitors = await Visitor.find({})
-        .populate('createdBy', 'name')
-        .limit(pageSize)
-        .skip(pageSize * (page - 1))
-        .sort({ createdAt: -1 });
+
+    let query = Visitor.find({}).populate('createdBy', 'name').sort({ createdAt: -1 });
+
+    if (req.query.limit !== 'all') {
+        query = query.limit(pageSize).skip(pageSize * (page - 1));
+    }
+
+    const visitors = await query;
 
     res.json({
         visitors,
         page,
-        pages: Math.ceil(count / pageSize),
+        pages: req.query.limit === 'all' ? 1 : Math.ceil(count / pageSize),
+        total: count
     });
 };
 
@@ -167,6 +177,88 @@ const getSecurityUsers = async (req, res) => {
     res.json(users);
 };
 
+// @desc    Get visitor analytics
+// @route   GET /api/admin/analytics/visitors
+// @access  Private/Admin
+const getVisitorAnalytics = async (req, res) => {
+    try {
+        const range = req.query.range || '7days';
+        let matchStage = {};
+        let groupBy = {};
+        let sortStage = { _id: 1 }; // Ascending date
+
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+
+        if (range === '7days') {
+            const last7Days = new Date();
+            last7Days.setDate(today.getDate() - 6);
+            last7Days.setHours(0, 0, 0, 0);
+
+            matchStage = {
+                entryTime: { $gte: last7Days, $lte: today }
+            };
+
+            groupBy = {
+                $dateToString: { format: "%Y-%m-%d", date: "$entryTime" }
+            };
+        } else if (range === 'weekly') {
+            // Last 4 weeks
+            const last4Weeks = new Date();
+            last4Weeks.setDate(today.getDate() - 28);
+            last4Weeks.setHours(0, 0, 0, 0);
+
+            matchStage = {
+                entryTime: { $gte: last4Weeks, $lte: today }
+            };
+
+            // Group by Week of Year (ISO)
+            groupBy = {
+                $dateToString: { format: "%Y-W%V", date: "$entryTime" }
+            };
+        }
+
+        const analytics = await Visitor.aggregate([
+            { $match: matchStage },
+            {
+                $group: {
+                    _id: groupBy,
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: sortStage }
+        ]);
+
+        // Transform for frontend: { date: "2024-02-10", count: 5 }
+        const formattedData = analytics.map(item => ({
+            date: item._id,
+            count: item.count
+        }));
+
+        // Fill in missing dates for '7days' to ensure continuous chart
+        if (range === '7days') {
+            const filledData = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(today.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                const found = formattedData.find(item => item.date === dateStr);
+                filledData.push({
+                    date: dateStr,
+                    count: found ? found.count : 0
+                });
+            }
+            return res.json(filledData);
+        }
+
+        res.json(formattedData);
+
+    } catch (error) {
+        console.error('Analytics Error:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 module.exports = {
     createSecurityUser,
     deleteUser,
@@ -174,4 +266,5 @@ module.exports = {
     getAllVisitors,
     searchVisitors,
     getSecurityUsers,
+    getVisitorAnalytics,
 };

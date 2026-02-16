@@ -18,13 +18,22 @@ const Sidebar = () => {
 
             <nav className="flex-1 p-4 space-y-2">
                 {user?.role === 'admin' && (
-                    <Link
-                        to="/admin"
-                        className={`block px-4 py-3 rounded transition-colors ${isActive('/admin') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800'
-                            }`}
-                    >
-                        Admin Dashboard
-                    </Link>
+                    <>
+                        <Link
+                            to="/admin"
+                            className={`block px-4 py-3 rounded transition-colors ${isActive('/admin') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800'
+                                }`}
+                        >
+                            Admin Dashboard
+                        </Link>
+                        <Link
+                            to="/admin/visitors"
+                            className={`block px-4 py-3 rounded transition-colors ${isActive('/admin/visitors') ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800'
+                                }`}
+                        >
+                            All Visitors
+                        </Link>
+                    </>
                 )}
 
                 {user?.role === 'security' && (

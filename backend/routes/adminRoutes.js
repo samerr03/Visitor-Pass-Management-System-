@@ -7,6 +7,7 @@ const {
     getAllVisitors,
     searchVisitors,
     getSecurityUsers,
+    getVisitorAnalytics,
 } = require('../controllers/adminController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
@@ -22,5 +23,6 @@ router.get('/dashboard', getDashboardStats);
 router.get('/visitors', getAllVisitors);
 router.get('/visitors/search', searchVisitors);
 router.get('/security-users', getSecurityUsers);
+router.get('/analytics/visitors', getVisitorAnalytics);
 
 module.exports = router;
