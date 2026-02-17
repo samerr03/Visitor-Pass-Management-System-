@@ -99,7 +99,16 @@ const StaffManagement = ({ onUpdate, user }) => {
     };
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        if (name === 'phone') {
+            // Only allow numbers and max 10 digits
+            const re = /^[0-9\b]+$/;
+            if (value === '' || (re.test(value) && value.length <= 10)) {
+                setFormData({ ...formData, [name]: value });
+            }
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
     };
 
     const handleAddUser = async (e) => {

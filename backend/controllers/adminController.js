@@ -8,6 +8,14 @@ const createSecurityUser = async (req, res, next) => {
         console.log('createSecurityUser Request File:', req.file);
         const { name, email, password, phone, designation, role } = req.body;
 
+        if (phone && phone.length !== 10) {
+            if (req.file) {
+                const fs = require('fs');
+                fs.unlinkSync(req.file.path);
+            }
+            return res.status(400).json({ message: 'Mobile number must be exactly 10 digits' });
+        }
+
         const userExists = await User.findOne({ email });
 
         if (userExists) {
