@@ -14,11 +14,15 @@ const { authorize } = require('../middleware/roleMiddleware');
 const upload = require('../middleware/uploadMiddleware'); // Import upload middleware
 const { createSecurityUserValidation, validate } = require('../middleware/validationMiddleware');
 
+const demoBlock = require('../middleware/demoBlock');
+const modelContext = require('../middleware/modelContext');
+
 router.use(protect);
+router.use(modelContext); // Apply DB context switch after auth
 router.use(authorize('admin'));
 
-router.post('/create-security', upload.single('photo'), createSecurityUserValidation, validate, createSecurityUser);
-router.delete('/user/:id', deleteUser);
+router.post('/create-security', demoBlock, upload.single('photo'), createSecurityUserValidation, validate, createSecurityUser);
+router.delete('/user/:id', demoBlock, deleteUser);
 router.get('/dashboard', getDashboardStats);
 router.get('/visitors', getAllVisitors);
 router.get('/visitors/search', searchVisitors);

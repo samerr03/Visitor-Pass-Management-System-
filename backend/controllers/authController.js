@@ -1,5 +1,6 @@
-const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { getProdConnection } = require('../config/db');
+const { getModels } = require('../models/ModelFactory');
 
 // Generate Token
 const generateToken = (id) => {
@@ -8,9 +9,18 @@ const generateToken = (id) => {
     });
 };
 
+// Start of Auth Controller
+// Helper to get Prod User Model safely
+const getProdUser = () => {
+    const conn = getProdConnection();
+    if (!conn) throw new Error("Database not initialized");
+    return getModels(conn).User;
+};
+
 // Seed Admin
 const seedAdmin = async (req, res, next) => {
     try {
+        const User = getProdUser();
         const exists = await User.findOne({ email: 'admin@example.com' });
 
         if (exists) {
@@ -33,25 +43,44 @@ const seedAdmin = async (req, res, next) => {
 // Login
 const loginUser = async (req, res, next) => {
     try {
-        const { email, password } = req.body;
+        let { email, password } = req.body;
+        email = email.toLowerCase().trim();
+        console.log(`[Login Attempt] Email: ${email}`);
 
+        const User = getProdUser();
         const user = await User.findOne({ email });
 
         if (!user) {
+            console.log('[Login Failed] User not found');
             return res.status(401).json({ message: 'Invalid credentials' });
         }
+
+        // Check if demo user account matches strict demo password if needed, 
+        // but robust hash check matches anyway.
 
         const isMatch = await user.matchPassword(password);
 
         if (!isMatch) {
+            console.log('[Login Failed] Password mismatch');
             return res.status(401).json({ message: 'Invalid credentials' });
         }
+
+        // --- Demo Session Logic ---
+        if (user.isDemo) {
+            const { v4: uuidv4 } = require('uuid');
+            user.demoSessionId = uuidv4();
+            await user.save();
+            console.log(`[Demo Login] Assigned new session ID: ${user.demoSessionId}`);
+        }
+        // --------------------------
 
         res.json({
             _id: user._id,
             name: user.name,
             email: user.email,
             role: user.role,
+            isDemo: user.isDemo,
+            demoSessionId: user.demoSessionId, // Optional: send to frontend if needed
             token: generateToken(user._id),
         });
 
@@ -71,30 +100,50 @@ const logoutUser = async (req, res) => {
 };
 
 // Get User Profile
-const getProfile = async (req, res) => {
-    const user = await User.findById(req.user._id);
-    if (user) {
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            staffId: user.staffId,
-            photo: user.photo,
-            photoUrl: user.photo ? `${process.env.BASE_URL || 'http://localhost:5000'}/${user.photo.replace(/\\/g, '/')}` : null,
-            phone: user.phone,
-            designation: user.designation,
-            isActive: user.isActive
-        });
-    } else {
-        res.status(404);
-        throw new Error('User not found');
+const getProfile = async (req, res, next) => {
+    try {
+        console.log(`[GetProfile] Outputting profile for user: ${req.user._id} (${req.user.email})`); // DEBUG
+
+        // req.models is populated by modelContext middleware based on isDemo flag
+        // This ensures if I am a demo user, I get my data from Demo DB (if that's the logic)
+        // OR: User Profile data always comes from Prod DB? 
+        // Actually, for consistency, the Middleware determines the source of truth.
+        // If I am demo_admin, do I exist in Demo DB? Yes, synced.
+
+        const { User } = req.models; // Context-aware model
+
+        const user = await User.findById(req.user._id);
+        if (user) {
+            res.json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                staffId: user.staffId,
+                photo: user.photo,
+                photoUrl: user.photo
+                    ? (user.photo.startsWith('http')
+                        ? user.photo
+                        : `${process.env.BASE_URL || 'http://localhost:5000'}/${user.photo.replace(/\\/g, '/').replace(/^\//, '')}`)
+                    : null,
+                phone: user.phone,
+                designation: user.designation,
+                isActive: user.isActive,
+                isDemo: user.isDemo
+            });
+        } else {
+            res.status(404);
+            throw new Error('User not found');
+        }
+    } catch (error) {
+        next(error);
     }
 };
 
 // Update Password
 const updatePassword = async (req, res, next) => {
     try {
+        const { User } = req.models;
         const user = await User.findById(req.user._id);
 
         if (user) {
@@ -117,6 +166,7 @@ const updateProfilePhoto = async (req, res, next) => {
             return res.status(400).json({ message: 'No file uploaded' });
         }
 
+        const { User } = req.models;
         const user = await User.findById(req.user._id);
 
         if (user) {

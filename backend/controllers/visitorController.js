@@ -1,4 +1,3 @@
-const Visitor = require('../models/Visitor');
 const generatePassId = require('../utils/generatePassId');
 const logAction = require('../utils/logger');
 
@@ -7,6 +6,7 @@ const logAction = require('../utils/logger');
 // @access  Private/Admin/Security
 const getAllVisitors = async (req, res, next) => {
     try {
+        const { Visitor } = req.models;
         const { status, keyword } = req.query;
         let query = {};
 
@@ -40,6 +40,7 @@ const getAllVisitors = async (req, res, next) => {
 // @access  Private/Security/Admin
 const getVisitorByPassId = async (req, res, next) => {
     try {
+        const { Visitor } = req.models;
         const visitor = await Visitor.findOne({ passId: req.params.passId })
             .populate('createdBy', 'name email');
 
@@ -58,6 +59,10 @@ const getVisitorByPassId = async (req, res, next) => {
 // @access  Private/Security/Admin
 const createVisitor = async (req, res, next) => {
     try {
+        console.log('[Create Visitor] Request Body:', req.body); // DEBUG
+        console.log('[Create Visitor] File:', req.file); // DEBUG
+
+        const { Visitor } = req.models;
         const { name, phone, purpose, idProofNumber, personToMeet } = req.body;
         // Fix: Store relative path 'uploads/filename.ext' to ensure it works on frontend
         const photo = req.file ? `uploads/${req.file.filename}` : null;
@@ -74,6 +79,7 @@ const createVisitor = async (req, res, next) => {
             passId,
             cardGenerated: true,
             createdBy: req.user._id,
+            demoSessionId: req.user.demoSessionId ? req.user.demoSessionId : null,
         });
 
         // Audit Log
@@ -90,6 +96,7 @@ const createVisitor = async (req, res, next) => {
 // @access  Private/Security/Admin
 const markExit = async (req, res, next) => {
     try {
+        const { Visitor } = req.models;
         const visitor = await Visitor.findById(req.params.id);
 
         if (!visitor) {
@@ -118,6 +125,7 @@ const markExit = async (req, res, next) => {
 // @access  Private/Admin
 const deleteVisitor = async (req, res, next) => {
     try {
+        const { Visitor } = req.models;
         const visitor = await Visitor.findById(req.params.id);
 
         if (!visitor) {
@@ -143,6 +151,7 @@ const deleteVisitor = async (req, res, next) => {
 // @access  Private/Security/Admin
 const getTodaysVisitors = async (req, res, next) => {
     try {
+        const { Visitor } = req.models;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 

@@ -23,6 +23,7 @@ import {
     TrendingDown,
     User
 } from 'lucide-react';
+import useAuth from '../hooks/useAuth';
 
 // --- Components ---
 
@@ -59,7 +60,7 @@ const StatCard = ({ title, value, icon: Icon, color, trend, trendValue }) => (
 
 
 
-const StaffManagement = ({ onUpdate }) => {
+const StaffManagement = ({ onUpdate, user }) => {
     const [users, setUsers] = useState([]);
     const [formData, setFormData] = useState({
         name: '',
@@ -304,7 +305,14 @@ const StaffManagement = ({ onUpdate }) => {
                             />
                         </div>
 
-                        <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white py-2.5 rounded-lg hover:bg-slate-800 font-bold text-sm shadow-lg shadow-slate-900/10 transition-all flex items-center justify-center gap-2">
+                        <button
+                            type="submit"
+                            disabled={loading || user?.isDemo}
+                            title={user?.isDemo ? "Disabled in Demo Mode" : ""}
+                            className={`w-full py-2.5 rounded-lg font-bold text-sm shadow-lg shadow-slate-900/10 transition-all flex items-center justify-center gap-2
+                                ${user?.isDemo ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-slate-800'}
+                            `}
+                        >
                             {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
                             {loading ? 'Creating...' : 'Create Staff Profile'}
                         </button>
@@ -335,6 +343,7 @@ const AdminDashboard = () => {
         completedVisits: 0,
         totalSecurityStaff: 0,
     });
+    const { user } = useAuth();
     useEffect(() => {
         const fetchData = async () => {
             await fetchStats();
@@ -431,7 +440,7 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* Staff Management */}
-                    <StaffManagement onUpdate={fetchStats} />
+                    <StaffManagement onUpdate={fetchStats} user={user} />
                 </div>
 
                 {/* Right Col: Recent Visitors - Removed or Replaced with something else? 

@@ -12,26 +12,32 @@ const {
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
 const upload = require('../middleware/uploadMiddleware');
-
 const { createVisitorValidation, validate } = require('../middleware/validationMiddleware');
 
+const demoBlock = require('../middleware/demoBlock');
+const modelContext = require('../middleware/modelContext');
+
+const demoLimit = require('../middleware/demoLimit');
+
 router.route('/')
-    .get(protect, authorize('admin', 'security'), getAllVisitors)
-    .post(protect, authorize('security'), upload.single('photo'), createVisitorValidation, validate, createVisitor);
+    .get(protect, modelContext, authorize('admin', 'security'), getAllVisitors)
+    .post(protect, modelContext, authorize('security'), demoLimit, upload.single('photo'), createVisitorValidation, validate, createVisitor);
+// Note: createVisitor IS allowed for demo users (in demo DB) as per requirements.
 
 router.route('/today')
-    .get(protect, authorize('admin', 'security'), getTodaysVisitors);
+    .get(protect, modelContext, authorize('admin', 'security'), getTodaysVisitors);
 
 router.route('/scan/:passId')
-    .get(protect, authorize('security', 'admin'), getVisitorByPassId);
+    .get(protect, modelContext, authorize('security', 'admin'), getVisitorByPassId);
 
 router.route('/:id/checkout')
-    .put(protect, authorize('security'), markExit);
+    .put(protect, modelContext, authorize('security'), markExit);
+// note: checkout IS allowed for demo users.
 
 router.route('/:id/exit')
-    .patch(protect, authorize('security'), markExit);
+    .patch(protect, modelContext, authorize('security'), markExit);
 
 router.route('/:id')
-    .delete(protect, authorize('admin'), require('../controllers/visitorController').deleteVisitor);
+    .delete(protect, modelContext, authorize('admin'), demoBlock, require('../controllers/visitorController').deleteVisitor);
 
 module.exports = router;

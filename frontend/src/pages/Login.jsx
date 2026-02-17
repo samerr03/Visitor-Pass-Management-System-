@@ -169,7 +169,7 @@ const Login = ({ role }) => {
                                     className="block w-full pl-10 pr-4 py-3 bg-black/20 border border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400/50 text-white placeholder-slate-500 transition-all text-sm backdrop-blur-sm shadow-inner"
                                     placeholder="name@company.com"
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => setEmail(e.target.value.toLowerCase().trim())}
                                     onFocus={() => setFocusedField('email')}
                                     onBlur={() => setFocusedField(null)}
                                     required
@@ -265,6 +265,35 @@ const Login = ({ role }) => {
                             <span className="text-purple-400">Staff</span>
                         </div>
                     )}
+
+                    {/* Demo Mode Quick Access */}
+                    <div className="mt-6 pt-4 border-t border-white/10">
+                        <p className="text-center text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-3">Safe Demo Mode</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setEmail('demo_admin@demo.com');
+                                    setPassword('demo_password');
+                                }}
+                                className="px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 transition-all text-xs text-blue-300 font-medium flex flex-col items-center gap-1 group"
+                            >
+                                <span className="uppercase tracking-wider text-[9px] opacity-70 group-hover:opacity-100">Admin Demo</span>
+                                <span className="font-bold text-white">Auto-Fill</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setEmail('demo_security@demo.com');
+                                    setPassword('demo_password');
+                                }}
+                                className="px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 hover:border-emerald-500/40 transition-all text-xs text-emerald-300 font-medium flex flex-col items-center gap-1 group"
+                            >
+                                <span className="uppercase tracking-wider text-[9px] opacity-70 group-hover:opacity-100">Security Demo</span>
+                                <span className="font-bold text-white">Auto-Fill</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Footer */}

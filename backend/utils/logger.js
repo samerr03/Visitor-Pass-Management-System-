@@ -1,12 +1,3 @@
-const AuditLog = require('../models/AuditLog');
-
-/**
- * Logs an action to the audit/audit log collection.
- * @param {Object} req - The express request object (contains user and ip)
- * @param {String} action - The action type (ENTRY, EXIT, DELETE, CREATE, APPROVE)
- * @param {Object} visitor - The visitor object involved in the action
- * @param {String} notes - Optional notes about the action
- */
 const logAction = async (req, action, visitor, notes = '') => {
     try {
         if (!req.user) {
@@ -16,7 +7,24 @@ const logAction = async (req, action, visitor, notes = '') => {
 
         const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip;
 
-        await AuditLog.create({
+        // Use injected model if available (for demo mode isolation), fallback to standard model (Prod)
+        let AuditLogModel = req.models?.AuditLog;
+
+        if (!AuditLogModel) {
+            const { getProdConnection } = require('../config/db');
+            const { getModels } = require('../models/ModelFactory');
+            const conn = getProdConnection();
+            if (conn) {
+                AuditLogModel = getModels(conn).AuditLog;
+            }
+        }
+
+        if (!AuditLogModel) {
+            console.warn('Audit Log Warning: Could not resolve AuditLog model');
+            return;
+        }
+
+        await AuditLogModel.create({
             action,
             visitorId: visitor._id,
             visitorName: visitor.name,

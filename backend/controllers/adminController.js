@@ -1,11 +1,9 @@
-const User = require('../models/User');
-const Visitor = require('../models/Visitor');
-
 // @desc    Register a new staff member (security)
 // @route   POST /api/admin/create-security
 // @access  Private/Admin
 const createSecurityUser = async (req, res, next) => {
     try {
+        const { User } = req.models;
         console.log('createSecurityUser Request Body:', req.body);
         console.log('createSecurityUser Request File:', req.file);
         const { name, email, password, phone, designation, role } = req.body;
@@ -36,6 +34,10 @@ const createSecurityUser = async (req, res, next) => {
             photo = `uploads/${req.file.filename}`;
         }
 
+        // For demo users, ensure they are created with the same demo flag? 
+        // Or maybe just let them be regular users in the demo DB.
+        // If we are in demo mode (req.isDemoMode), new users are created in demo DB.
+
         const user = await User.create({
             name,
             email,
@@ -54,7 +56,6 @@ const createSecurityUser = async (req, res, next) => {
             email: user.email,
             role: user.role,
             staffId: user.staffId,
-            staffId: user.staffId,
             photo: user.photo,
             photoUrl: user.photo ? `${process.env.BASE_URL || 'http://localhost:5000'}/${user.photo.replace(/\\/g, '/')}` : null
         });
@@ -69,6 +70,7 @@ const createSecurityUser = async (req, res, next) => {
 // @route   DELETE /api/admin/user/:id
 // @access  Private/Admin
 const deleteUser = async (req, res) => {
+    const { User } = req.models;
     const user = await User.findById(req.params.id);
 
     if (user) {
@@ -78,12 +80,16 @@ const deleteUser = async (req, res) => {
         }
 
         // Delete photo file if exists
+        // Note: For demo mode, we might want to skip physical file deletion to avoid impacting others if shared?
+        // But since we use unique files, it's ok.
         if (user.photo) {
             const fs = require('fs');
             const path = require('path');
             const filePath = path.join(__dirname, '..', user.photo);
             if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
+                try {
+                    fs.unlinkSync(filePath);
+                } catch (e) { console.error("Error deleting file", e); }
             }
         }
 
@@ -99,6 +105,7 @@ const deleteUser = async (req, res) => {
 // @route   GET /api/admin/dashboard
 // @access  Private/Admin
 const getDashboardStats = async (req, res) => {
+    const { User, Visitor } = req.models;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -122,6 +129,7 @@ const getDashboardStats = async (req, res) => {
 // @route   GET /api/admin/visitors
 // @access  Private/Admin
 const getAllVisitors = async (req, res) => {
+    const { Visitor } = req.models;
     const page = Number(req.query.page) || 1;
     let pageSize = 10;
 
@@ -153,6 +161,7 @@ const getAllVisitors = async (req, res) => {
 // @route   GET /api/admin/visitors/search
 // @access  Private/Admin
 const searchVisitors = async (req, res) => {
+    const { Visitor } = req.models;
     const keyword = req.query.keyword
         ? {
             $or: [
@@ -170,6 +179,7 @@ const searchVisitors = async (req, res) => {
 // @route   GET /api/admin/security-users
 // @access  Private/Admin
 const getSecurityUsers = async (req, res) => {
+    const { User } = req.models;
     // get all users except the one making the request (optional, but good practice). 
     // For now, let's return all so they can see themselves too.
     // Or just all users.
@@ -181,6 +191,7 @@ const getSecurityUsers = async (req, res) => {
 // @route   GET /api/admin/analytics/visitors
 // @access  Private/Admin
 const getVisitorAnalytics = async (req, res) => {
+    const { Visitor } = req.models;
     try {
         const range = req.query.range || '7days';
         let matchStage = {};

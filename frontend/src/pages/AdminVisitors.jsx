@@ -13,6 +13,7 @@ import {
     FileText
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import useAuth from '../hooks/useAuth';
 
 const AdminVisitors = () => {
     const [visitors, setVisitors] = useState([]);
@@ -22,6 +23,7 @@ const AdminVisitors = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalVisitors, setTotalVisitors] = useState(0);
+    const { user } = useAuth();
 
     useEffect(() => {
         fetchVisitors();
@@ -182,7 +184,14 @@ const AdminVisitors = () => {
                 </div>
                 <button
                     onClick={handleExportCSV}
-                    className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-0.5 transition-all font-medium text-sm"
+                    disabled={user?.isDemo}
+                    title={user?.isDemo ? "Export disabled in Demo Mode" : "Download CSV"}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all
+                        ${user?.isDemo
+                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                            : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-0.5'
+                        }
+                    `}
                 >
                     <Download className="w-4 h-4" />
                     Download CSV
@@ -292,8 +301,8 @@ const AdminVisitors = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${visitor.status === 'active'
-                                                    ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                                                    : 'bg-slate-100 text-slate-500 border border-slate-200'
+                                                ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                                                : 'bg-slate-100 text-slate-500 border border-slate-200'
                                                 }`}>
                                                 <span className={`w-1.5 h-1.5 rounded-full ${visitor.status === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
                                                 {visitor.status}

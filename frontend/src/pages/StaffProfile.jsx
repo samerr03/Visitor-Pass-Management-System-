@@ -42,6 +42,7 @@ const StaffProfile = () => {
             setPasswordData({ password: '', confirmPassword: '' });
             setTimeout(() => setMsg(''), 3000);
         } catch (err) {
+            console.error(err);
             setMsg(err.response?.data?.message || 'Error updating password');
         } finally {
             setLoading(false);
@@ -99,7 +100,6 @@ const StaffProfile = () => {
             <h1 className="text-3xl font-bold mb-8 text-gray-800">My Profile</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Profile Card */}
                 <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col items-center text-center">
                     <div className="w-32 h-32 rounded-full bg-gray-200 overflow-hidden mb-4 border-4 border-blue-100 shadow-sm">
                         {user.photo || user.photoUrl ? (
@@ -108,15 +108,14 @@ const StaffProfile = () => {
                                 alt={user.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
-                                    console.error('Image Load Error:', e.target.src); // DEBUG
                                     e.target.onerror = null;
                                     e.target.style.display = 'none';
-                                    e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-gray-400 font-bold bg-slate-100 text-4xl">${user.name.charAt(0)}</div>`;
+                                    e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-gray-400 font-bold bg-slate-100 text-4xl">${user.name ? user.name.charAt(0) : 'U'}</div>`;
                                 }}
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold bg-slate-100 text-4xl">
-                                {user.name.charAt(0)}
+                                {user.name ? user.name.charAt(0) : 'U'}
                             </div>
                         )}
                     </div>
@@ -188,10 +187,12 @@ const StaffProfile = () => {
                                 </div>
                                 <button
                                     onClick={handlePhotoUpload}
-                                    disabled={loading}
-                                    className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-semibold shadow disabled:opacity-50"
+                                    disabled={loading || user.isDemo}
+                                    className={`w-full py-2 rounded font-semibold shadow disabled:opacity-50 
+                                        ${user.isDemo ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}
+                                    `}
                                 >
-                                    {loading ? 'Saving...' : 'Save Photo'}
+                                    {loading ? 'Saving...' : (user.isDemo ? 'Disabled in Demo Mode' : 'Save Photo')}
                                 </button>
                             </div>
                         )}
@@ -227,8 +228,14 @@ const StaffProfile = () => {
                             />
                         </div>
 
-                        <button type="submit" disabled={loading} className="w-full bg-slate-800 text-white py-2.5 rounded hover:bg-black font-semibold shadow transition-colors disabled:opacity-50">
-                            {loading ? 'Updating...' : 'Update Password'}
+                        <button
+                            type="submit"
+                            disabled={loading || user.isDemo}
+                            className={`w-full py-2.5 rounded font-semibold shadow transition-colors disabled:opacity-50
+                                ${user.isDemo ? 'bg-gray-400 cursor-not-allowed' : 'bg-slate-800 text-white hover:bg-black'}
+                            `}
+                        >
+                            {loading ? 'Updating...' : (user.isDemo ? 'Disabled in Demo Mode' : 'Update Password')}
                         </button>
                     </form>
                 </div>

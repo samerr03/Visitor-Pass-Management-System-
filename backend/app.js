@@ -11,11 +11,13 @@ const auditRoutes = require("./routes/auditRoutes");
 
 const app = express();
 
+
 // Connect MongoDB
-mongoose
-    .connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/visitor_management')
-    .then(() => console.log("MongoDB Connected"))
-    .catch((err) => console.log("Mongo Error:", err.message));
+// Connect MongoDB - Handled in server.js via config/db.js
+// mongoose
+//     .connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/visitor_management')
+//     .then(() => console.log("MongoDB Connected"))
+//     .catch((err) => console.log("Mongo Error:", err.message));
 
 // Middleware
 app.use(express.json());
@@ -29,10 +31,40 @@ app.use(cors({
     credentials: true,
 }));
 
+const rateLimit = require('express-rate-limit');
+const modelContext = require('./middleware/modelContext');
+const demoGuard = require('./middleware/demoGuard');
+
+// Rate Limiting
+const limiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutes
+    max: 500, // Increased from 100
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 minutes
+    max: 100, // Increased from 20 to prevent 429 during testing
+    message: "Too many login attempts, please try again later"
+});
+
+const visitorWriteLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 50, // Increased from 10
+    message: "Rate limit exceeded for visitor operations"
+});
+
+// Apply global limiter
+app.use(limiter);
+
+// Specific limiters will be applied in routes if needed, or we can apply broadly here
+// For now, let's keep it simple.
+
 // Routes
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/visitors", visitorRoutes);
+app.use("/api/visitors", visitorWriteLimiter, visitorRoutes);
 app.use("/api/audit-logs", auditRoutes);
 
 // Serve static files from uploads directory

@@ -203,7 +203,13 @@ const SecurityDashboard = () => {
             fetchActiveVisitors();
             setTimeout(() => setMsg(''), 3000);
         } catch (err) {
-            setMsg(err.response?.data?.message || 'Error creating pass');
+            console.error(err);
+            if (err.response?.data?.errors) {
+                // Handle validation errors array
+                setMsg(`Error: ${err.response.data.errors.map(e => e.msg).join(', ')}`);
+            } else {
+                setMsg(err.response?.data?.message || 'Error creating pass');
+            }
         } finally {
             setLoading(false);
         }
@@ -221,7 +227,8 @@ const SecurityDashboard = () => {
             fetchActiveVisitors();
             setShowConfirmModal(false);
         } catch (err) {
-            alert('Error checking out');
+            console.error(err);
+            alert(err.response?.data?.message || 'Error checking out');
         } finally {
             setCheckoutLoading(false);
             setSelectedVisitor(null);
@@ -403,8 +410,13 @@ const SecurityDashboard = () => {
 
                                     <button
                                         type="submit"
-                                        disabled={loading || !isFormValid}
-                                        className="w-full bg-indigo-600 text-white py-3 rounded-xl hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-200 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2 mt-2"
+                                        disabled={loading}
+                                        className={`w-full py-3 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 mt-2
+                                            ${loading
+                                                ? 'bg-indigo-400 cursor-not-allowed'
+                                                : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200 active:scale-[0.98] text-white'
+                                            }
+                                        `}
                                     >
                                         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <div className="w-5 h-5" />}
                                         {loading ? 'Processing...' : 'Generate Pass & Check-In'}

@@ -11,9 +11,16 @@ const Sidebar = () => {
 
     return (
         <div className="w-64 bg-gray-900 text-white min-h-screen flex flex-col">
-            <div className="p-6 border-b border-gray-800 flex flex-col items-start">
+            <div className="p-6 border-b border-gray-800 flex flex-col items-start bg-gray-900/50">
                 <img src={logo} alt="ZenZ" className="h-12 mb-3 w-auto" />
-                <p className="text-sm text-gray-400">Hello, {user?.name}</p>
+                <div className="flex items-center justify-between w-full">
+                    <p className="text-sm text-gray-400">Hello, {user?.name}</p>
+                    {user?.isDemo && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                            DEMO MODE
+                        </span>
+                    )}
+                </div>
             </div>
 
             <nav className="flex-1 p-4 space-y-2">

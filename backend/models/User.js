@@ -45,6 +45,13 @@ const userSchema = new mongoose.Schema({
     refreshToken: {
         type: String,
     },
+    isDemo: {
+        type: Boolean,
+        default: false,
+    },
+    demoSessionId: {
+        type: String, // Stores the unique session ID for demo users
+    },
 }, { timestamps: true });
 
 // Hash password before saving
@@ -62,4 +69,4 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = userSchema;

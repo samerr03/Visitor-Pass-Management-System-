@@ -1,14 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const { seedAdmin, loginUser, refresh, logoutUser, getProfile, updatePassword } = require('../controllers/authController');
+const { seedAdmin, loginUser, refresh, logoutUser, getProfile, updatePassword, updateProfilePhoto } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
-router.post('/seed', seedAdmin);
+const modelContext = require('../middleware/modelContext');
+const demoBlock = require('../middleware/demoBlock');
+const upload = require('../middleware/uploadMiddleware'); // Assuming upload is defined here based on the Code Edit
+
+router.post('/seed-admin', seedAdmin);
 router.post('/login', loginUser);
-router.post('/refresh', refresh);
+router.post('/refresh-token', refresh);
 router.post('/logout', logoutUser);
-router.get('/profile', protect, getProfile);
-router.put('/update-password', protect, updatePassword);
-router.patch('/profile/photo', protect, require('../middleware/uploadMiddleware').single('photo'), require('../controllers/authController').updateProfilePhoto);
+
+router.route('/profile')
+    .get(protect, modelContext, getProfile);
+router.put('/profile/password', protect, modelContext, demoBlock, updatePassword); // Added demoBlock back as it was in original and not explicitly removed in the Code Edit for this line
+router.put('/profile/photo', protect, modelContext, demoBlock, upload.single('photo'), updateProfilePhoto); // Added demoBlock back, used 'upload' as per Code Edit
 
 module.exports = router;

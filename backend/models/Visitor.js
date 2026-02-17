@@ -57,6 +57,10 @@ const visitorSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
+    demoSessionId: {
+        type: String, // Links visitor to the specific demo session
+        index: true,
+    },
 }, { timestamps: true });
 
 // Text index for search
@@ -65,4 +69,4 @@ visitorSchema.index({ name: 'text', phone: 'text', passId: 'text' });
 // Index for search performance
 visitorSchema.index({ name: 'text', phone: 'text' });
 
-module.exports = mongoose.model('Visitor', visitorSchema);
+module.exports = visitorSchema;

@@ -1,10 +1,9 @@
-const AuditLog = require('../models/AuditLog');
-
 // @desc    Get audit logs
 // @route   GET /api/audit-logs
 // @access  Private/Admin
 const getAuditLogs = async (req, res, next) => {
     try {
+        const { AuditLog } = req.models;
         const { action, startDate, endDate, performedBy } = req.query;
         let query = {};
 
