@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import loginBg from '../assets/login-bg.png';
-import logo from '../assets/logo-dark.svg';
+import logo from '../assets/shield-logo.png';
 
 const RoleSelection = () => {
     const navigate = useNavigate();
@@ -68,23 +68,20 @@ const RoleSelection = () => {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="mb-14 text-center flex flex-col items-center"
+                    className="mb-6 text-center flex flex-col items-center"
                 >
-                    <motion.img
+                    <img
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ delay: 0.1, duration: 0.5 }}
                         src={logo}
-                        alt="ZenZ Logo"
-                        className="w-32 md:w-40 mb-8 drop-shadow-2xl"
+                        alt="System Logo"
+                        className="w-56 md:w-72 mb-4 drop-shadow-2xl"
                     />
 
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg font-display mb-3">
-                        ZenZ <span className="text-blue-500">.</span>
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg font-display mb-6">
+                        Visitor Management System <span className="text-blue-500">.</span>
                     </h1>
-                    <h2 className="text-2xl md:text-3xl font-bold text-slate-200 tracking-wide mb-5">
-                        Visitor Management System
-                    </h2>
 
                     <div className="h-1 w-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-6"></div>
 
@@ -220,7 +217,7 @@ const RoleSelection = () => {
             <div className="relative z-10 w-full text-center pb-6">
                 <div className="w-full max-w-xs mx-auto h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-4"></div>
                 <p className="text-xs text-slate-500 font-medium tracking-wide">
-                    &copy; 2026 <span className="text-slate-400 hover:text-white transition-colors cursor-pointer">ZenZ</span> — Secure Visitor Management
+                    &copy; 2026 <span className="text-slate-400 hover:text-white transition-colors cursor-pointer">VMS</span> — Secure Visitor Management
                 </p>
             </div>
         </div>

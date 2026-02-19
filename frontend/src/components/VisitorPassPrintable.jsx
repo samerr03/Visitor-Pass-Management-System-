@@ -1,8 +1,29 @@
-import React, { forwardRef } from "react";
-import QRCode from "react-qr-code";
-import logo from "../assets/logo.svg";
+import React, { forwardRef, useEffect, useState } from "react";
+import QRCodeLib from "qrcode";
+import logo from "../assets/shield-logo.png";
 
 const VisitorPassPrintable = forwardRef(({ visitor }, ref) => {
+    const [qrCodeUrl, setQrCodeUrl] = useState("");
+
+    useEffect(() => {
+        if (visitor) {
+            const generateQR = async () => {
+                try {
+                    const qrData = JSON.stringify({
+                        id: visitor._id,
+                        passId: visitor.passId,
+                        name: visitor.name,
+                        entryTime: visitor.entryTime,
+                    });
+                    const url = await QRCodeLib.toDataURL(qrData, { width: 140, margin: 0 });
+                    setQrCodeUrl(url);
+                } catch (err) {
+                    console.error("QR Generation Error:", err);
+                }
+            };
+            generateQR();
+        }
+    }, [visitor]);
     // ✅ Safe API base (no crash if env missing)
     const API_BASE_URL =
         import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
@@ -76,17 +97,17 @@ const VisitorPassPrintable = forwardRef(({ visitor }, ref) => {
             {/* Header */}
             <div className="bg-slate-900 text-white p-4 text-center print-color-adjust-exact webkit-print-color-adjust-exact relative">
                 {/* Logo */}
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-md flex items-center justify-center p-1 shadow-sm">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 w-24 h-24 flex items-center justify-center">
                     <img src={logo} alt="Logo" className="w-full h-full object-contain" />
                 </div>
 
                 <div className="flex items-center justify-center gap-3 mb-1">
-                    <h1 className="text-xl font-bold tracking-wider uppercase pl-12">
+                    <h1 className="text-xl font-bold tracking-wider uppercase pl-36">
                         Visitor Pass
                     </h1>
                 </div>
-                <p className="text-slate-400 text-[10px] tracking-widest uppercase pl-12">
-                    SafeEntry Systems
+                <p className="text-slate-400 text-[10px] tracking-widest uppercase pl-36">
+                    Visitor Management System
                 </p>
             </div>
 
@@ -154,15 +175,9 @@ const VisitorPassPrintable = forwardRef(({ visitor }, ref) => {
 
                 {/* QR Code */}
                 <div className="mt-2 flex justify-center items-center">
-                    <QRCode
-                        value={JSON.stringify({
-                            id: visitor?._id || "",
-                            passId: visitor?.passId || "",
-                            name: visitor?.name || "",
-                        })}
-                        size={100}
-                        viewBox={`0 0 256 256`}
-                    />
+                    {qrCodeUrl && (
+                        <img src={qrCodeUrl} alt="QR Code" className="w-[100px] h-[100px]" />
+                    )}
                 </div>
             </div>
 

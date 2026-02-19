@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import api from '../api/axios';
-import { useReactToPrint } from 'react-to-print';
+// import { useReactToPrint } from 'react-to-print';
 import VisitorPass from '../components/VisitorPass';
 import ConfirmModal from '../components/ConfirmModal';
 import VisitorPassPrintable from '../components/VisitorPassPrintable';
@@ -50,11 +50,48 @@ const SecurityDashboard = () => {
     const printRef = useRef();
     const componentRef = useRef();
 
-    const handlePrint = useReactToPrint({
-        contentRef: printRef, // New syntax
-        documentTitle: `VisitorPass-${currentPass?.passId}`,
-        onAfterPrint: () => console.log("Print Success"),
-    });
+    const handlePrint = () => {
+        const content = printRef.current;
+        if (content) {
+            const printWindow = window.open('', '', 'height=800,width=800');
+            printWindow.document.write('<html><head><title>Print Pass</title>');
+
+            // Add Styles
+            const styleSheets = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
+            styleSheets.forEach(style => {
+                printWindow.document.write(style.outerHTML);
+            });
+
+            // Add custom print styles
+            printWindow.document.write(`
+                <style>
+                    body { 
+                        display: flex; 
+                        justify-content: center; 
+                        align-items: center; 
+                        min-height: 100vh; 
+                        margin: 0; 
+                        background: white;
+                    }
+                    @media print {
+                        body { -webkit-print-color-adjust: exact; }
+                    }
+                </style>
+            `);
+
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(content.outerHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+
+            // Allow time for styles/images to load
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 800);
+        }
+    };
 
     const fetchActiveVisitors = async () => {
         try {

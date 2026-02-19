@@ -30,14 +30,14 @@ const StaffCard = forwardRef(({ user }, ref) => {
                 style={{ fontFamily: "'Inter', sans-serif", boxShadow: "0 20px 40px rgba(0,0,0,0.15)" }}
             >
                 {/* Premium Header with Gradient & Overlay */}
-                <div className="bg-gradient-to-br from-slate-900 via-[#0a192f] to-blue-900 h-36 w-full absolute top-0 left-0 flex flex-col items-center pt-6 overflow-hidden">
+                <div className="bg-gradient-to-br from-slate-900 via-[#0a192f] to-blue-900 h-44 w-full absolute top-0 left-0 flex flex-col items-center pt-2 overflow-hidden">
                     {/* Glossy Overlay */}
                     <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
                     <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl"></div>
 
                     {/* Logo & Tagline */}
                     <div className="relative z-10 flex flex-col items-center">
-                        <img src="/src/assets/logo-dark.svg" alt="ZenZ Logo" className="w-48 h-auto drop-shadow-md" />
+                        <img src="/src/assets/shield-logo.png" alt="System Logo" className="w-36 h-auto drop-shadow-md" />
                     </div>
                 </div>
 
@@ -113,7 +113,7 @@ const StaffCard = forwardRef(({ user }, ref) => {
 
                 {/* Footer Strip */}
                 <div className="bg-[#0a192f] text-white text-[9px] py-2 w-full text-center tracking-[0.2em] font-medium border-t border-blue-900/50">
-                    ZENZ SYSTEMS SECURITY
+                    VISITOR MANAGEMENT SYSTEM
                 </div>
             </div>
         </div>

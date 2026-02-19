@@ -1,7 +1,30 @@
-import React from "react";
-import QRCode from "react-qr-code";
+import React, { useEffect, useState } from "react";
+import QRCodeLib from "qrcode";
+import logo from "../assets/shield-logo.png";
 
 const VisitorPass = ({ visitor, innerRef }) => {
+    const [qrCodeUrl, setQrCodeUrl] = useState("");
+
+    useEffect(() => {
+        if (visitor) {
+            const generateQR = async () => {
+                try {
+                    const qrData = JSON.stringify({
+                        id: visitor._id,
+                        passId: visitor.passId,
+                        name: visitor.name,
+                        entryTime: visitor.entryTime,
+                    });
+                    const url = await QRCodeLib.toDataURL(qrData, { width: 200, margin: 1 });
+                    setQrCodeUrl(url);
+                } catch (err) {
+                    console.error("QR Generation Error:", err);
+                }
+            };
+            generateQR();
+        }
+    }, [visitor]);
+
     if (!visitor) return null;
 
     // 🔥 Safe API base (no crash if env missing)
@@ -61,10 +84,14 @@ const VisitorPass = ({ visitor, innerRef }) => {
                 className="w-[320px] min-h-[500px] bg-white border-2 border-slate-900 rounded-xl overflow-hidden shadow-2xl text-sm mx-auto print:w-[320px] print:shadow-none"
             >
                 {/* Header */}
-                <div className="bg-slate-900 text-white p-5 text-center">
-                    <h1 className="text-xl font-bold uppercase">Visitor Pass</h1>
-                    <p className="text-slate-400 text-[10px] uppercase">
-                        SafeEntry Systems
+                <div className="bg-slate-900 text-white p-5 text-center relative">
+                    {/* Logo */}
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-20 h-20 flex items-center justify-center">
+                        <img src={logo} alt="Logo" className="w-full h-full object-contain" />
+                    </div>
+                    <h1 className="text-xl font-bold uppercase pl-32">Visitor Pass</h1>
+                    <p className="text-slate-400 text-[10px] uppercase pl-32">
+                        Visitor Management System
                     </p>
                 </div>
 
@@ -139,16 +166,12 @@ const VisitorPass = ({ visitor, innerRef }) => {
                     </div>
 
                     {/* QR */}
-                    <div className="mt-2 bg-white p-2 rounded-lg border-2 border-slate-200">
-                        <QRCode
-                            value={JSON.stringify({
-                                id: visitor._id,
-                                passId: visitor.passId,
-                                name: visitor.name,
-                                entryTime: visitor.entryTime,
-                            })}
-                            size={140}
-                        />
+                    <div className="mt-2 bg-white p-2 rounded-lg border-2 border-slate-200 flex justify-center">
+                        {qrCodeUrl ? (
+                            <img src={qrCodeUrl} alt="QR Code" className="w-[140px] h-[140px]" />
+                        ) : (
+                            <div className="w-[140px] h-[140px] bg-slate-100 flex items-center justify-center text-xs text-slate-400">Loading QR...</div>
+                        )}
                     </div>
 
                     <p className="text-[8px] text-slate-400 text-center">

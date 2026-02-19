@@ -1,22 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#0a192f;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#112240;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00f2ff;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="symbolGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#00f2ff;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:1" />
-    </linearGradient>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700&amp;family=Inter:wght@400;500&amp;display=swap');
+      .text-main { font-family: 'Outfit', sans-serif; font-weight: 700; fill: #ffffff; font-size: 48px; }
+      .text-tag { font-family: 'Inter', sans-serif; font-weight: 500; fill: #cbd5e1; font-size: 17px; letter-spacing: 0.8px; }
+    </style>
   </defs>
   
-  <!-- Rounded Square Background -->
-  <rect x="0" y="0" width="512" height="512" rx="100" ry="100" fill="url(#bgGrad)" />
-  
-  <!-- White/Cyan Symbol Centered -->
-  <g transform="translate(76, 76) scale(4)">
-     <path d="M10 10 L80 10 L40 50 L10 50 Z" fill="#ffffff" opacity="0.95" />
-    <path d="M40 50 L90 50 L50 90 L0 90 Z" fill="#ffffff" />
-    <path d="M45 50 L85 10" stroke="#00f2ff" stroke-width="4" stroke-linecap="round" />
+  <!-- Symbol: Stylized Z -->
+  <g transform="translate(20, 20) scale(0.8)">
+    <path d="M10 10 L80 10 L40 50 L10 50 Z" fill="url(#grad1)" opacity="0.9" />
+    <path d="M40 50 L90 50 L50 90 L0 90 Z" fill="url(#grad1)" />
+    <!-- Accent stroke -->
+    <path d="M40 50 L80 10" stroke="#00f2ff" stroke-width="2" stroke-linecap="round" />
   </g>
+
+  <!-- Text -->
+  <text x="110" y="58" class="text-main">ZenZ</text>
+  <text x="110" y="96" class="text-tag" style="font-size: 20px; font-weight: 500; letter-spacing: 0.5px;">Streamlining Visitor Management</text>
 </svg>

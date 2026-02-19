@@ -1,4 +1,4 @@
-import logo from '../assets/logo-dark.svg';
+import logo from '../assets/shield-logo.png';
 import { Link, useLocation } from 'react-router-dom';
 import { useContext } from 'react';
 import AuthContext from '../context/AuthContext';
@@ -12,7 +12,7 @@ const Sidebar = () => {
     return (
         <div className="w-64 bg-gray-900 text-white min-h-screen flex flex-col">
             <div className="p-6 border-b border-gray-800 flex flex-col items-start bg-gray-900/50">
-                <img src={logo} alt="ZenZ" className="h-12 mb-3 w-auto" />
+                <img src={logo} alt="VMS" className="h-24 mb-3 w-auto" />
                 <div className="flex items-center justify-between w-full">
                     <p className="text-sm text-gray-400">Hello, {user?.name}</p>
                     {user?.isDemo && (

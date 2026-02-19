@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useAuth from '../hooks/useAuth';
-import logo from '../assets/logo-dark.svg'; // Import ZenZ Logo
+import logo from '../assets/shield-logo.png'; // Import Shield Logo
 
 const Login = ({ role }) => {
     const [email, setEmail] = useState('');
@@ -118,7 +118,7 @@ const Login = ({ role }) => {
                     {/* Branding Header */}
                     <div className="text-center mb-6 flex flex-col items-center">
                         {/* Secure Access Badge */}
-                        <div className="mb-4 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] uppercase tracking-[0.2em] font-bold text-slate-400 shadow-inner flex items-center gap-1.5">
+                        <div className="mb-1 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] uppercase tracking-[0.2em] font-bold text-slate-400 shadow-inner flex items-center gap-1.5">
                             <div className={`w-1.5 h-1.5 rounded-full ${roleParam === 'admin' ? 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.6)]' : roleParam === 'security' ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]' : 'bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.6)]'}`}></div>
                             Secure Access
                         </div>
@@ -129,8 +129,8 @@ const Login = ({ role }) => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
                             src={logo}
-                            alt="ZenZ Systems"
-                            className="w-36 mb-2 drop-shadow-lg"
+                            alt="System Logo"
+                            className="w-52 mb-1 drop-shadow-lg"
                         />
 
                         <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1 drop-shadow-md">
@@ -303,7 +303,7 @@ const Login = ({ role }) => {
                 {/* Footer */}
                 <div className="mt-8 text-center">
                     <p className="text-xs text-slate-500 font-medium tracking-wide">
-                        &copy; 2026 <span className="text-slate-300 font-bold">ZenZ</span> — Secure Visitor Management
+                        &copy; 2026 <span className="text-slate-300 font-bold">VMS</span> — Secure Visitor Management
                     </p>
                 </div>
             </motion.div>

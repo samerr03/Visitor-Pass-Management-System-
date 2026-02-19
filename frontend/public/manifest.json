@@ -1,20 +1,20 @@
 {
-    "name": "ZenZ Visitor Management",
-    "short_name": "ZenZ",
+    "name": "Visitor Management System",
+    "short_name": "VMS",
     "description": "Streamlining Visitor Management",
     "theme_color": "#0a192f",
     "background_color": "#0a192f",
     "display": "standalone",
     "icons": [
         {
-            "src": "/app_icon.svg",
+            "src": "/app_icon.png",
             "sizes": "512x512",
-            "type": "image/svg+xml"
+            "type": "image/png"
         },
         {
-            "src": "/favicon.svg",
+            "src": "/favicon.png",
             "sizes": "any",
-            "type": "image/svg+xml"
+            "type": "image/png"
         }
     ]
 }
