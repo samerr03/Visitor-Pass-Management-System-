@@ -157,7 +157,7 @@ const Login = ({ role }) => {
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Email Field */}
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-slate-400 ml-1 tracking-widest uppercase">Email Address</label>
+                            <label htmlFor="email" className="text-[10px] font-bold text-slate-400 ml-1 tracking-widest uppercase">Email Address</label>
                             <div className="relative group">
                                 <div className={`absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-300 ${focusedField === 'email' ? 'text-white' : 'text-slate-500'}`}>
                                     <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -165,7 +165,9 @@ const Login = ({ role }) => {
                                     </svg>
                                 </div>
                                 <input
+                                    id="email"
                                     type="email"
+                                    autoComplete="email"
                                     className="block w-full pl-10 pr-4 py-3 bg-black/20 border border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400/50 text-white placeholder-slate-500 transition-all text-sm backdrop-blur-sm shadow-inner"
                                     placeholder="name@company.com"
                                     value={email}
@@ -179,7 +181,7 @@ const Login = ({ role }) => {
 
                         {/* Password Field */}
                         <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-slate-400 ml-1 tracking-widest uppercase">Password</label>
+                            <label htmlFor="password" className="text-[10px] font-bold text-slate-400 ml-1 tracking-widest uppercase">Password</label>
                             <div className="relative group">
                                 <div className={`absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-300 ${focusedField === 'password' ? 'text-white' : 'text-slate-500'}`}>
                                     <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -187,7 +189,9 @@ const Login = ({ role }) => {
                                     </svg>
                                 </div>
                                 <input
+                                    id="password"
                                     type={showPassword ? "text" : "password"}
+                                    autoComplete="current-password"
                                     className="block w-full pl-10 pr-10 py-3 bg-black/20 border border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400/50 text-white placeholder-slate-500 transition-all text-sm backdrop-blur-sm shadow-inner"
                                     placeholder="••••••••"
                                     value={password}

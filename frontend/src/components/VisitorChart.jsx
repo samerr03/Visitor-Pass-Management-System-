@@ -84,7 +84,7 @@ const VisitorChart = () => {
                 </div>
             </div>
 
-            <div className="flex-1 w-full min-h-[300px] relative z-10">
+            <div className="flex-1 w-full min-w-0 relative z-10">
                 {loading ? (
                     <div className="h-full w-full flex flex-col items-center justify-center gap-3">
                         <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>

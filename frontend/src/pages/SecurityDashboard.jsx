@@ -312,15 +312,17 @@ const SecurityDashboard = () => {
                                     {/* Form Fields */}
                                     <div className="space-y-4">
                                         <div className="space-y-1">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Full Name</label>
+                                            <label htmlFor="visitor-name" className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Full Name</label>
                                             <div className="relative">
                                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                                 <input
+                                                    id="visitor-name"
                                                     type="text"
                                                     name="name"
                                                     value={formData.name}
                                                     onChange={handleChange}
                                                     placeholder="Enter visitor name"
+                                                    autoComplete="name"
                                                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
                                                     required
                                                 />
@@ -328,16 +330,18 @@ const SecurityDashboard = () => {
                                         </div>
 
                                         <div className="space-y-1">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Phone Number</label>
+                                            <label htmlFor="visitor-phone" className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Phone Number</label>
                                             <div className="relative">
                                                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                                 <input
+                                                    id="visitor-phone"
                                                     type="tel"
                                                     name="phone"
                                                     value={formData.phone}
                                                     onChange={handleChange}
                                                     placeholder="10-digit mobile number"
                                                     maxLength={10}
+                                                    autoComplete="tel"
                                                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400 font-mono"
                                                     required
                                                 />
@@ -346,10 +350,11 @@ const SecurityDashboard = () => {
 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-1">
-                                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">ID Type</label>
+                                                <label htmlFor="visitor-id-type" className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">ID Type</label>
                                                 <div className="relative">
                                                     <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                                     <select
+                                                        id="visitor-id-type"
                                                         name="idProofType"
                                                         value={formData.idProofType}
                                                         onChange={handleChange}
@@ -361,14 +366,16 @@ const SecurityDashboard = () => {
                                                 </div>
                                             </div>
                                             <div className="space-y-1">
-                                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">ID Number</label>
+                                                <label htmlFor="visitor-id-number" className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">ID Number</label>
                                                 <input
+                                                    id="visitor-id-number"
                                                     type="text"
                                                     name="idProofNumber"
                                                     value={formData.idProofNumber}
                                                     onChange={handleChange}
                                                     placeholder="XXXX XXXX XXXX"
                                                     maxLength={formData.idProofType === 'Aadhar' ? 12 : 16}
+                                                    autoComplete="off"
                                                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400 font-mono"
                                                     required
                                                 />
@@ -376,15 +383,17 @@ const SecurityDashboard = () => {
                                         </div>
 
                                         <div className="space-y-1">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Meeting With</label>
+                                            <label htmlFor="visitor-meet" className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Meeting With</label>
                                             <div className="relative">
                                                 <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                                 <input
+                                                    id="visitor-meet"
                                                     type="text"
                                                     name="personToMeet"
                                                     value={formData.personToMeet}
                                                     onChange={handleChange}
                                                     placeholder="Employee name"
+                                                    autoComplete="off"
                                                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
                                                     required
                                                 />
@@ -392,15 +401,17 @@ const SecurityDashboard = () => {
                                         </div>
 
                                         <div className="space-y-1">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Purpose</label>
+                                            <label htmlFor="visitor-purpose" className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Purpose</label>
                                             <div className="relative">
                                                 <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                                 <input
+                                                    id="visitor-purpose"
                                                     type="text"
                                                     name="purpose"
                                                     value={formData.purpose}
                                                     onChange={handleChange}
                                                     placeholder="e.g. Interview, Delivery"
+                                                    autoComplete="off"
                                                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
                                                     required
                                                 />
@@ -437,8 +448,11 @@ const SecurityDashboard = () => {
                                 <div className="relative w-full sm:w-72">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                     <input
+                                        id="search-active-visitors"
+                                        name="search"
                                         type="text"
                                         placeholder="Search active visitors..."
+                                        aria-label="Search active visitors"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none shadow-sm transition-all"

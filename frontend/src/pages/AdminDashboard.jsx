@@ -253,7 +253,7 @@ const StaffManagement = ({ onUpdate, user }) => {
                                         <span className="text-[9px] font-bold uppercase">Upload</span>
                                     </div>
                                 )}
-                                <input type="file" accept="image/*" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
+                                <input id="staff-photo-upload" name="photo" type="file" accept="image/*" onChange={handleFileChange} aria-label="Upload Photo" className="absolute inset-0 opacity-0 cursor-pointer" />
                             </div>
                         </div>
 
@@ -262,6 +262,8 @@ const StaffManagement = ({ onUpdate, user }) => {
                                 type="text"
                                 name="name"
                                 placeholder="Full Name"
+                                aria-label="Full Name"
+                                autoComplete="name"
                                 value={formData.name}
                                 onChange={handleChange}
                                 required
@@ -272,6 +274,8 @@ const StaffManagement = ({ onUpdate, user }) => {
                                     type="text"
                                     name="phone"
                                     placeholder="Phone"
+                                    aria-label="Phone Number"
+                                    autoComplete="tel"
                                     value={formData.phone}
                                     onChange={handleChange}
                                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
@@ -280,6 +284,8 @@ const StaffManagement = ({ onUpdate, user }) => {
                                     name="role"
                                     value={formData.role}
                                     onChange={handleChange}
+                                    aria-label="Role"
+                                    autoComplete="off"
                                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
                                 >
                                     <option value="security">Security</option>
@@ -290,6 +296,8 @@ const StaffManagement = ({ onUpdate, user }) => {
                                 type="email"
                                 name="email"
                                 placeholder="Email Address"
+                                aria-label="Email Address"
+                                autoComplete="email"
                                 value={formData.email}
                                 onChange={handleChange}
                                 required
@@ -299,6 +307,8 @@ const StaffManagement = ({ onUpdate, user }) => {
                                 type="password"
                                 name="password"
                                 placeholder="Password"
+                                aria-label="Password"
+                                autoComplete="new-password"
                                 value={formData.password}
                                 onChange={handleChange}
                                 required
@@ -308,6 +318,8 @@ const StaffManagement = ({ onUpdate, user }) => {
                                 type="text"
                                 name="designation"
                                 placeholder="Designation (Optional)"
+                                aria-label="Designation"
+                                autoComplete="organization-title"
                                 value={formData.designation}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
@@ -356,7 +368,6 @@ const AdminDashboard = () => {
     useEffect(() => {
         const fetchData = async () => {
             await fetchStats();
-            setLoading(false);
         };
 
         fetchData();

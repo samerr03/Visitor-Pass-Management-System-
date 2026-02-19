@@ -17,7 +17,7 @@ const StaffProfile = () => {
     const fetchProfile = async () => {
         try {
             const res = await api.get('/auth/profile');
-            console.log('User Data:', res.data); // DEBUG
+
             setUser(res.data);
         } catch (err) {
             console.error(err);
@@ -78,7 +78,7 @@ const StaffProfile = () => {
     // Helper to get photo URL
     const getPhotoUrl = () => {
         if (user.photoUrl) {
-            console.log('Using photoUrl:', user.photoUrl);
+
             return user.photoUrl;
         }
         if (user.photo) {
@@ -87,7 +87,7 @@ const StaffProfile = () => {
             // Remove leading slash if any to avoid double slash with base url
             const cleanPath = user.photo.replace(/\\/g, '/').replace(/^\//, '');
             const finalUrl = `${BASE_URL}/${cleanPath}`;
-            console.log('Generated URL from photo path:', finalUrl);
+
             return finalUrl;
         }
         return null;
@@ -157,6 +157,8 @@ const StaffProfile = () => {
                                 </div>
                             </div>
                             <input
+                                id="photo-upload"
+                                name="photo"
                                 type="file"
                                 className="hidden"
                                 accept="image/png, image/jpeg, image/jpg"
@@ -206,10 +208,12 @@ const StaffProfile = () => {
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                            <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
                             <input
+                                id="new-password"
                                 type="password"
                                 name="password"
+                                autoComplete="new-password"
                                 value={passwordData.password}
                                 onChange={handlePasswordChange}
                                 required
@@ -217,10 +221,12 @@ const StaffProfile = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                            <label htmlFor="confirm-new-password" className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
                             <input
+                                id="confirm-new-password"
                                 type="password"
                                 name="confirmPassword"
+                                autoComplete="new-password"
                                 value={passwordData.confirmPassword}
                                 onChange={handlePasswordChange}
                                 required
