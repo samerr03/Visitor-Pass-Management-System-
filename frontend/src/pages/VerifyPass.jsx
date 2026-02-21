@@ -60,7 +60,17 @@ const VerifyPass = () => {
             setVisitor(res.data);
         } catch (err) {
             console.error(err);
-            setError(err.response?.data?.message || 'Invalid or Pass Not Found');
+            if (err.response) {
+                if (err.response.status === 404) {
+                    setError('INVALID_PASS');
+                } else if (err.response.status === 400) {
+                    setError('INVALID_QR');
+                } else {
+                    setError('SERVER_ERROR');
+                }
+            } else {
+                setError('SERVER_ERROR');
+            }
         } finally {
             setLoading(false);
         }
@@ -122,20 +132,74 @@ const VerifyPass = () => {
     }
 
     if (error) {
+        let title = "Error";
+        let message = "An unknown error occurred.";
+
+        switch (error) {
+            case 'INVALID_PASS':
+                title = "Invalid Pass";
+                message = "This QR code is invalid or the pass has been deleted.";
+                break;
+            case 'INVALID_QR':
+                title = "Invalid Format";
+                message = "The scanned QR code format is not recognized or is malformed.";
+                break;
+            case 'SERVER_ERROR':
+                title = "Connection Error";
+                message = "Failed to communicate with the server. Please try again later.";
+                break;
+            default:
+                title = "Verification Failed";
+                message = error;
+                break;
+        }
+
         return (
-            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-                <div className="bg-white max-w-sm w-full p-8 rounded-2xl shadow-xl flex flex-col items-center text-center border-t-4 border-red-500">
-                    <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
-                        <XCircle className="w-8 h-8" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight mb-2">Invalid Pass</h2>
-                    <p className="text-slate-500 text-sm mb-6">{error}</p>
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+                {/* Background overlay */}
+                <div className="absolute top-0 inset-x-0 h-[250px] bg-gradient-to-b from-slate-200 to-transparent -z-10 opacity-50"></div>
+
+                <div className="w-full max-w-sm flex justify-between items-center mb-6 z-10">
                     <button
-                        onClick={() => navigate('/')}
-                        className="w-full py-3 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 transition-colors shadow-lg active:scale-95"
+                        onClick={() => navigate(-1)}
+                        className="flex flex-row items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors"
                     >
-                        Return Home
+                        <ArrowLeft className="w-5 h-5" />
+                        <span className="font-medium text-sm">Back to scanner</span>
                     </button>
+                    {passId && (
+                        <div className="text-slate-400 text-xs font-mono tracking-widest uppercase">ID: {passId.substring(0, 12)}{passId.length > 12 ? '...' : ''}</div>
+                    )}
+                </div>
+
+                <div className="bg-white max-w-sm w-full p-8 rounded-3xl shadow-2xl flex flex-col items-center text-center border-t-4 border-red-500 z-10">
+                    <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-5 ring-8 ring-red-50/50">
+                        <AlertCircle className="w-10 h-10" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight mb-3">{title}</h2>
+                    <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 w-full mb-6 text-left">
+                        <p className="text-slate-600 text-sm leading-relaxed">{message}</p>
+                    </div>
+
+                    <div className="w-full space-y-3">
+                        <button
+                            onClick={() => {
+                                // Either refresh to fetch again, or navigate to a scanner
+                                // Since we are on a specific verify page, hitting back might be the scanner. 
+                                // To follow the requirement: "Re-Scan (retry fetch or open scanner)"
+                                navigate('/security');
+                            }}
+                            className="w-full py-3.5 bg-indigo-50 text-indigo-700 font-semibold rounded-xl hover:bg-indigo-100 transition-colors border border-indigo-100 flex items-center justify-center gap-2"
+                        >
+                            Re-Scan
+                        </button>
+                        <button
+                            onClick={() => navigate('/security')}
+                            className="w-full py-3.5 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 transition-colors shadow-lg active:scale-95"
+                        >
+                            Return to Security Dashboard
+                        </button>
+                    </div>
                 </div>
             </div>
         );
