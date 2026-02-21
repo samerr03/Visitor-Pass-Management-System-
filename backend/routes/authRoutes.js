@@ -14,7 +14,7 @@ router.post('/logout', logoutUser);
 
 router.route('/profile')
     .get(protect, modelContext, getProfile);
-router.put('/profile/password', protect, modelContext, demoBlock, updatePassword); // Added demoBlock back as it was in original and not explicitly removed in the Code Edit for this line
-router.put('/profile/photo', protect, modelContext, demoBlock, upload.single('photo'), updateProfilePhoto); // Added demoBlock back, used 'upload' as per Code Edit
+router.put('/profile/password', protect, modelContext, demoBlock, updatePassword);
+router.put('/profile/photo', protect, modelContext, upload.single('photo'), updateProfilePhoto);
 
 module.exports = router;

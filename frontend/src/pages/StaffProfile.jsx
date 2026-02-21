@@ -59,7 +59,7 @@ const StaffProfile = () => {
         formData.append('photo', photoFile);
 
         try {
-            const res = await api.patch('/auth/profile/photo', formData, {
+            const res = await api.put('/auth/profile/photo', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setMsg('Photo updated successfully');
