@@ -32,12 +32,6 @@ const RoleSelection = () => {
                 stiffness: 40,
                 damping: 15,
             },
-        },
-        hover: {
-            y: -12,
-            scale: 1.02,
-            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
-            transition: { duration: 0.4, ease: "easeOut" }
         }
     };
 
@@ -52,7 +46,7 @@ const RoleSelection = () => {
                     className="w-full h-full object-cover opacity-40 scale-105"
                 />
                 {/* Modern Dark Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a]/90 via-[#0f172a]/80 to-[#0B0F19]"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70"></div>
                 {/* Radial Glow */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none"></div>
             </div>
@@ -61,7 +55,7 @@ const RoleSelection = () => {
             <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
 
             {/* Main Content Area */}
-            <div className="flex-grow flex flex-col items-center justify-center py-12 px-4 relative z-10 w-full max-w-7xl mx-auto">
+            <div className="flex-grow flex flex-col items-center justify-center py-8 px-4 relative z-10 w-full max-w-7xl mx-auto">
 
                 {/* Branding Header */}
                 <motion.div
@@ -76,17 +70,17 @@ const RoleSelection = () => {
                         transition={{ delay: 0.1, duration: 0.5 }}
                         src={logo}
                         alt="System Logo"
-                        className="w-56 md:w-72 mb-4 drop-shadow-2xl"
+                        className="w-56 md:w-72 -mt-6 mb-1 drop-shadow-2xl"
                     />
 
                     <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg font-display mb-6">
-                        Visitor Management System <span className="text-blue-500">.</span>
+                        Visitor Management System
                     </h1>
 
                     <div className="h-1 w-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-6"></div>
 
-                    <p className="text-lg text-slate-400 font-medium tracking-wide max-w-lg mx-auto leading-relaxed">
-                        Secure. Smart. <span className="text-slate-200">Seamless Access Control.</span>
+                    <p className="text-lg text-white/80 font-medium tracking-wide max-w-lg mx-auto leading-relaxed">
+                        Secure. Smart. Seamless Access Control.
                     </p>
                 </motion.div>
 
@@ -101,84 +95,78 @@ const RoleSelection = () => {
                     {/* Admin Card */}
                     <motion.div
                         variants={cardVariants}
-                        whileHover="hover"
-                        className="bg-white/[0.03] backdrop-blur-2xl rounded-[24px] border border-white/[0.08] shadow-2xl flex flex-col h-full overflow-hidden group relative hover:border-blue-500/30 transition-colors duration-500"
+                        className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl flex flex-col h-full overflow-hidden group relative hover:border-white/20 hover:translate-y-1 transition-all duration-300"
                     >
                         {/* Top Accent Border */}
                         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 shadow-[0_0_20px_rgba(59,130,246,0.5)]"></div>
 
-                        <div className="p-8 flex-grow flex flex-col items-center text-center relative z-10">
+                        <div className="p-8 md:p-10 flex-grow flex flex-col items-center text-center relative z-10">
                             {/* Icon Glow */}
                             <div className="absolute top-10 left-1/2 -translate-x-1/2 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl group-hover:bg-blue-500/30 transition-all duration-500"></div>
 
                             <motion.div
-                                className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/20 ring-1 ring-white/20 relative z-10"
+                                className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 ring-1 ring-white/20 relative z-10"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                             </motion.div>
 
-                            <h3 className="text-xl font-bold text-white mb-3 group-hover:text-blue-400 transition-colors">Admin Portal</h3>
+                            <h3 className="text-xl font-bold text-white mt-4 mb-3 group-hover:text-blue-400 transition-colors">Admin Portal</h3>
                             <p className="text-slate-400 text-sm leading-relaxed mb-8 px-4">
                                 Complete control over logs, staff records, and system analytics.
                             </p>
 
-                            <motion.button
-                                whileHover={{ scale: 1.03 }}
-                                whileTap={{ scale: 0.98 }}
+                            <button
                                 onClick={() => handleLogin('admin')}
-                                className="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden"
+                                className="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold uppercase tracking-wider rounded-xl shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 transition-all duration-200 hover:brightness-110 active:scale-[0.98] relative overflow-hidden group/btn"
                             >
                                 <span className="relative z-10">Login as Admin</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 relative z-10 group-hover/btn:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                                 </svg>
                                 {/* Button Shine */}
-                                <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12"></div>
-                            </motion.button>
+                                <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700 skew-x-12"></div>
+                            </button>
                         </div>
                     </motion.div>
 
                     {/* Security Card */}
                     <motion.div
                         variants={cardVariants}
-                        whileHover="hover"
-                        className="bg-white/[0.03] backdrop-blur-2xl rounded-[24px] border border-white/[0.08] shadow-2xl flex flex-col h-full overflow-hidden group relative hover:border-emerald-500/30 transition-colors duration-500"
+                        className="bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl flex flex-col h-full overflow-hidden group relative hover:border-white/20 hover:translate-y-1 transition-all duration-300"
                     >
                         {/* Top Accent Border */}
                         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.5)]"></div>
 
-                        <div className="p-8 flex-grow flex flex-col items-center text-center relative z-10">
+                        <div className="p-8 md:p-10 flex-grow flex flex-col items-center text-center relative z-10">
                             {/* Icon Glow */}
                             <div className="absolute top-10 left-1/2 -translate-x-1/2 w-24 h-24 bg-emerald-500/20 rounded-full blur-2xl group-hover:bg-emerald-500/30 transition-all duration-500"></div>
 
                             <motion.div
-                                className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/20 ring-1 ring-white/20 relative z-10"
+                                className="w-16 h-16 mx-auto bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 ring-1 ring-white/20 relative z-10"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </motion.div>
 
-                            <h3 className="text-xl font-bold text-white mb-3 group-hover:text-emerald-400 transition-colors">Security Access</h3>
+                            <h3 className="text-xl font-bold text-white mt-4 mb-3 group-hover:text-emerald-400 transition-colors">Security Access</h3>
                             <p className="text-slate-400 text-sm leading-relaxed mb-8 px-4">
                                 Fast-track visitor entry, pass generation, and identity verification.
                             </p>
 
-                            <motion.button
-                                whileHover={{ scale: 1.03 }}
-                                whileTap={{ scale: 0.98 }}
+                            <button
                                 onClick={() => handleLogin('security')}
-                                className="w-full py-3.5 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-sm font-bold uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden"
+                                className="w-full py-3.5 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-semibold uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 transition-all duration-200 hover:brightness-110 active:scale-[0.98] relative overflow-hidden group/btn"
                             >
                                 <span className="relative z-10">Login as Security</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 relative z-10 group-hover/btn:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                                 </svg>
                                 {/* Button Shine */}
-                                <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 skew-x-12"></div>
-                            </motion.button>
+                                <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700 skew-x-12"></div>
+                            </button>
                         </div>
                     </motion.div>
 
