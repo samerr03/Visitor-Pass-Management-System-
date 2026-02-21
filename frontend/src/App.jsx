@@ -10,6 +10,7 @@ import StaffProfile from './pages/StaffProfile';
 import MyIDCard from './pages/MyIDCard';
 import AuditLogs from './pages/AuditLogs';
 import AdminVisitors from './pages/AdminVisitors';
+import VerifyPass from './pages/VerifyPass';
 import { AuthProvider } from './context/AuthContext';
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
           </Route>
 
           <Route path="/" element={<RoleSelection />} />
+          <Route path="/verify/:passId" element={<VerifyPass />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>

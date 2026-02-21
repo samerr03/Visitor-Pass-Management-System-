@@ -67,6 +67,9 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/visitors", visitorWriteLimiter, visitorRoutes);
 app.use("/api/audit-logs", auditRoutes);
 
+const passRoutes = require("./routes/passRoutes");
+app.use("/api/passes", passRoutes);
+
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 

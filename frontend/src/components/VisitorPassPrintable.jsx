@@ -6,16 +6,13 @@ const VisitorPassPrintable = forwardRef(({ visitor }, ref) => {
     const [qrCodeUrl, setQrCodeUrl] = useState("");
 
     useEffect(() => {
-        if (visitor) {
+        if (visitor?.passId) {
             const generateQR = async () => {
                 try {
-                    const qrData = JSON.stringify({
-                        id: visitor._id,
-                        passId: visitor.passId,
-                        name: visitor.name,
-                        entryTime: visitor.entryTime,
-                    });
-                    const url = await QRCodeLib.toDataURL(qrData, { width: 140, margin: 0 });
+                    const frontendUrl = window.location.origin;
+                    const qrData = `${frontendUrl}/verify/${visitor.passId}`;
+                    // High-resolution scan configuration explicitly for React-to-Print processing
+                    const url = await QRCodeLib.toDataURL(qrData, { width: 300, margin: 3 });
                     setQrCodeUrl(url);
                 } catch (err) {
                     console.error("QR Generation Error:", err);
@@ -24,6 +21,7 @@ const VisitorPassPrintable = forwardRef(({ visitor }, ref) => {
             generateQR();
         }
     }, [visitor]);
+
     // ✅ Safe API base (no crash if env missing)
     const API_BASE_URL =
         import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
@@ -92,44 +90,43 @@ const VisitorPassPrintable = forwardRef(({ visitor }, ref) => {
     return (
         <div
             ref={ref}
-            className="print-area w-[400px] mx-auto bg-white border border-slate-900 rounded-xl overflow-hidden relative text-sm p-0"
+            className="print-area w-full bg-white relative text-sm p-0 flex flex-col"
         >
             {/* Header */}
             <div className="bg-slate-900 text-white p-4 text-center print-color-adjust-exact webkit-print-color-adjust-exact relative">
                 {/* Logo */}
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 w-24 h-24 flex items-center justify-center">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 w-16 h-16 flex items-center justify-center">
                     <img src={logo} alt="Logo" className="w-full h-full object-contain" />
                 </div>
 
                 <div className="flex items-center justify-center gap-3 mb-1">
-                    <h1 className="text-xl font-bold tracking-wider uppercase pl-36">
+                    <h1 className="text-xl font-bold tracking-wider uppercase pl-20">
                         Visitor Pass
                     </h1>
                 </div>
-                <p className="text-slate-400 text-[10px] tracking-widest uppercase pl-36">
+                <p className="text-slate-400 text-[10px] tracking-widest uppercase pl-20">
                     Visitor Management System
                 </p>
             </div>
 
             {/* Content */}
-            <div className="p-4 flex flex-col items-center gap-2">
-                {/* Photo */}
-                <div className="relative">
-                    <div className="w-24 h-24 rounded-full border-2 border-slate-100 overflow-hidden bg-slate-100 mx-auto">
-                        <img
-                            src={photoUrl || fallbackAvatar}
-                            alt="Visitor"
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                                e.currentTarget.src = fallbackAvatar;
-                            }}
-                        />
-                    </div>
+            <div className="p-4 flex flex-col items-center gap-3 flex-1 bg-white">
+
+                {/* Image Section */}
+                <div className="w-24 h-24 rounded-full border-2 border-slate-100 overflow-hidden bg-slate-100 mx-auto transform translate-y-2">
+                    <img
+                        src={photoUrl || fallbackAvatar}
+                        alt="Visitor"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                            e.currentTarget.src = fallbackAvatar;
+                        }}
+                    />
                 </div>
 
                 {/* Details */}
-                <div className="text-center w-full space-y-0.5 mt-1">
-                    <h2 className="text-lg font-bold text-slate-800 uppercase">
+                <div className="text-center w-full space-y-0.5 mt-2">
+                    <h2 className="text-xl font-bold text-slate-800 uppercase">
                         {visitor?.name || "Unknown"}
                     </h2>
                     <p className="text-slate-500 font-medium text-xs">
@@ -138,7 +135,7 @@ const VisitorPassPrintable = forwardRef(({ visitor }, ref) => {
                 </div>
 
                 {/* Info Grid */}
-                <div className="grid grid-cols-2 gap-2 w-full bg-slate-50 p-2 rounded border border-slate-200 mt-2 print-color-adjust-exact">
+                <div className="grid grid-cols-2 gap-2 w-full bg-slate-50 p-3 rounded-lg border border-slate-200 mt-2 print-color-adjust-exact">
                     <div>
                         <p className="text-[9px] text-slate-400 uppercase font-semibold">
                             Meeting With
@@ -174,9 +171,9 @@ const VisitorPassPrintable = forwardRef(({ visitor }, ref) => {
                 </div>
 
                 {/* QR Code */}
-                <div className="mt-2 flex justify-center items-center">
+                <div className="mt-3 mb-2 flex justify-center items-center qr-container w-full">
                     {qrCodeUrl && (
-                        <img src={qrCodeUrl} alt="QR Code" className="w-[100px] h-[100px]" />
+                        <img src={qrCodeUrl} alt="QR Code" className="w-[140px] h-[140px]" />
                     )}
                 </div>
             </div>

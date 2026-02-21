@@ -9,12 +9,9 @@ const VisitorPass = ({ visitor, innerRef }) => {
         if (visitor) {
             const generateQR = async () => {
                 try {
-                    const qrData = JSON.stringify({
-                        id: visitor._id,
-                        passId: visitor.passId,
-                        name: visitor.name,
-                        entryTime: visitor.entryTime,
-                    });
+                    // Update QR code value to point to the verification page
+                    const frontendUrl = window.location.origin;
+                    const qrData = `${frontendUrl}/verify/${visitor.passId}`;
                     const url = await QRCodeLib.toDataURL(qrData, { width: 200, margin: 1 });
                     setQrCodeUrl(url);
                 } catch (err) {
@@ -77,6 +74,18 @@ const VisitorPass = ({ visitor, innerRef }) => {
             });
     };
 
+    // Determine Status Badge Color
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'USED': return 'bg-slate-500';
+            case 'EXPIRED': return 'bg-red-500';
+            case 'ACTIVE':
+            default: return 'bg-emerald-500';
+        }
+    };
+
+    const currentStatus = visitor.passStatus || 'ACTIVE';
+
     return (
         <div className="w-full h-full flex justify-center items-center py-4 print:p-0 print:block print:w-auto print:h-auto">
             <div
@@ -118,17 +127,17 @@ const VisitorPass = ({ visitor, innerRef }) => {
                             )}
                         </div>
 
-                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full uppercase shadow-md">
-                            Active
+                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-0.5 ${getStatusColor(currentStatus)} text-white text-[10px] font-bold rounded-full uppercase shadow-md whitespace-nowrap`}>
+                            {currentStatus}
                         </div>
                     </div>
 
                     {/* Name */}
-                    <div className="text-center w-full">
+                    <div className="text-center w-full mt-1">
                         <h2 className="text-xl font-bold text-slate-800 uppercase">
                             {visitor.name}
                         </h2>
-                        <p className="text-slate-500 text-xs">
+                        <p className="text-slate-500 text-xs mt-0.5">
                             {visitor.purpose} • {visitor.phone}
                         </p>
                     </div>

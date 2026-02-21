@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-// import { useReactToPrint } from 'react-to-print';
+import { useReactToPrint } from 'react-to-print';
 import VisitorPass from '../components/VisitorPass';
 import ConfirmModal from '../components/ConfirmModal';
 import VisitorPassPrintable from '../components/VisitorPassPrintable';
 import PhotoCaptureModal from '../components/PhotoCaptureModal';
+import QRScannerModal from '../components/QRScannerModal';
 import {
     Camera,
     User,
@@ -16,10 +18,12 @@ import {
     CheckCircle,
     AlertCircle,
     CreditCard,
-    Loader2
+    Loader2,
+    QrCode
 } from 'lucide-react';
 
 const SecurityDashboard = () => {
+    const navigate = useNavigate();
     const [visitors, setVisitors] = useState([]);
     const [activeVisitors, setActiveVisitors] = useState([]);
     const [formData, setFormData] = useState({
@@ -42,6 +46,9 @@ const SecurityDashboard = () => {
     // Webcam Modal State
     const [showWebcamModal, setShowWebcamModal] = useState(false);
 
+    // Scanner Modal State
+    const [showScannerModal, setShowScannerModal] = useState(false);
+
     // Confirmation Modal State
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [selectedVisitor, setSelectedVisitor] = useState(null);
@@ -50,48 +57,34 @@ const SecurityDashboard = () => {
     const printRef = useRef();
     const componentRef = useRef();
 
-    const handlePrint = () => {
-        const content = printRef.current;
-        if (content) {
-            const printWindow = window.open('', '', 'height=800,width=800');
-            printWindow.document.write('<html><head><title>Print Pass</title>');
-
-            // Add Styles
-            const styleSheets = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
-            styleSheets.forEach(style => {
-                printWindow.document.write(style.outerHTML);
-            });
-
-            // Add custom print styles
-            printWindow.document.write(`
-                <style>
-                    body { 
-                        display: flex; 
-                        justify-content: center; 
-                        align-items: center; 
-                        min-height: 100vh; 
-                        margin: 0; 
-                        background: white;
-                    }
-                    @media print {
-                        body { -webkit-print-color-adjust: exact; }
-                    }
-                </style>
-            `);
-
-            printWindow.document.write('</head><body>');
-            printWindow.document.write(content.outerHTML);
-            printWindow.document.write('</body></html>');
-            printWindow.document.close();
-            printWindow.focus();
-
-            // Allow time for styles/images to load
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.close();
-            }, 800);
-        }
-    };
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+        documentTitle: 'Visitor Pass',
+        onBeforeGetContent: () => {
+            return new Promise((resolve) => setTimeout(resolve, 500));
+        },
+        pageStyle: `
+            @page {
+              size: A4 portrait;
+              margin: 10mm;
+            }
+            body {
+              margin: 0;
+              background: white;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .print-area {
+              width: 95mm;
+              margin: 0 auto;
+            }
+            @media print {
+              .no-print {
+                display: none !important;
+              }
+            }
+        `
+    });
 
     const fetchActiveVisitors = async () => {
         try {
@@ -144,6 +137,37 @@ const SecurityDashboard = () => {
 
         return () => clearTimeout(delayDebounceFn);
     }, [searchTerm]);
+
+    // Scan resolution
+    const handleScanSuccess = (decodedText) => {
+        setShowScannerModal(false);
+        try {
+            // URL decode/extract the passId
+            // format: http://domain/verify/VPS-1234
+            const urlObj = new URL(decodedText);
+            const pathParts = urlObj.pathname.split('/');
+            const passId = pathParts[pathParts.length - 1];
+
+            if (passId && passId.startsWith('VPS-')) {
+                navigate(`/verify/${passId}`);
+            } else {
+                alert("Invalid Pass Format Scanned.");
+            }
+        } catch (e) {
+            // Probably string raw JSON from old ver or invalid URL
+            try {
+                const parsed = JSON.parse(decodedText);
+                if (parsed.passId) {
+                    navigate(`/verify/${parsed.passId}`);
+                } else {
+                    alert("Invalid QR Code content.");
+                }
+            } catch (err) {
+                alert("Unrecognized Format. Scanned content: " + decodedText);
+            }
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -283,9 +307,18 @@ const SecurityDashboard = () => {
                         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Security Console</h1>
                         <p className="text-slate-500 text-sm mt-1">Manage visitor entries and exits</p>
                     </div>
-                    <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                        <span className="text-sm font-medium text-slate-700">System Online</span>
+                    <div className="flex flex-wrap items-center gap-3">
+                        <button
+                            onClick={() => setShowScannerModal(true)}
+                            className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 font-semibold text-sm"
+                        >
+                            <QrCode className="w-4 h-4" />
+                            Scan QR
+                        </button>
+                        <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                            <span className="text-sm font-medium text-slate-700">System Online</span>
+                        </div>
                     </div>
                 </div>
 
@@ -582,8 +615,8 @@ const SecurityDashboard = () => {
                     </div>
                 </div>
 
-                {/* Hidden Printable Component using off-screen positioning */}
-                <div style={{ position: "absolute", top: "-9999px", left: "-9999px" }}>
+                {/* Hidden Printable Component */}
+                <div style={{ position: 'absolute', left: '-10000px', top: 0 }}>
                     <VisitorPassPrintable ref={printRef} visitor={currentPass} />
                 </div>
 
@@ -594,41 +627,59 @@ const SecurityDashboard = () => {
                     onCapture={handlePhotoCapture}
                 />
 
+                {/* QR Scanner Modal */}
+                <QRScannerModal
+                    isOpen={showScannerModal}
+                    onClose={() => setShowScannerModal(false)}
+                    onScanSuccess={handleScanSuccess}
+                />
+
                 {/* Pass Generation Modal */}
                 {showPassModal && currentPass && (
-                    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in no-print">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full flex flex-col max-h-[90vh] overflow-hidden transform transition-all scale-100 ring-1 ring-slate-900/5">
+                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 sm:p-6 animate-fade-in no-print">
+                        <div className="bg-white rounded-2xl shadow-2xl border border-white/20 w-full max-w-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] overflow-hidden transform transition-all scale-100 ring-1 ring-slate-900/5">
+
                             {/* Modal Header */}
-                            <div className="p-4 border-b border-slate-100 flex justify-between items-center shrink-0 bg-slate-50/50">
-                                <div className="flex items-center gap-2 text-emerald-600">
-                                    <CheckCircle className="w-5 h-5 fill-emerald-100" />
-                                    <h3 className="text-lg font-bold text-slate-800">Pass Generated</h3>
+                            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center shrink-0 bg-white">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-emerald-50 rounded-full">
+                                        <CheckCircle className="w-5 h-5 text-emerald-600" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-slate-900 tracking-tight">Pass Generated</h3>
+                                        <p className="text-xs text-slate-500 font-medium">Visitor registered successfully</p>
+                                    </div>
                                 </div>
-                                <button onClick={() => setShowPassModal(false)} className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50">
+                                <button
+                                    onClick={() => setShowPassModal(false)}
+                                    className="text-slate-400 hover:text-slate-600 transition-colors p-2 rounded-full hover:bg-slate-50"
+                                >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
                             </div>
 
-                            {/* Modal Body - Scrollable if needed */}
-                            <div className="p-6 bg-slate-100 overflow-y-auto flex-1 flex items-center justify-center">
-                                {/* Display Component (Not for printing) */}
-                                <VisitorPass innerRef={componentRef} visitor={currentPass} />
+                            {/* Modal Body - Fixed Container with Scroll */}
+                            <div className="p-6 sm:p-8 bg-slate-50/50 overflow-y-auto flex-1 flex flex-col items-center justify-start group">
+                                <div className="w-full max-w-md mx-auto transition-transform duration-300 group-hover:scale-[1.01]">
+                                    {/* Display Component (Not for printing) */}
+                                    <VisitorPass innerRef={componentRef} visitor={currentPass} />
+                                </div>
                             </div>
 
                             {/* Modal Footer */}
-                            <div className="p-4 bg-white border-t border-slate-100 flex gap-3 shrink-0">
+                            <div className="px-6 py-4 bg-white border-t border-slate-100 flex items-center gap-3 shrink-0">
+                                <button
+                                    onClick={() => setShowPassModal(false)}
+                                    className="flex-1 sm:flex-none sm:w-32 h-11 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-semibold text-sm transition-colors"
+                                >
+                                    Close
+                                </button>
                                 <button
                                     onClick={handlePrint}
-                                    className="flex-1 bg-slate-900 text-white py-2.5 rounded-xl hover:bg-slate-800 font-semibold shadow-lg shadow-slate-200 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                    className="flex-1 h-11 bg-slate-900 text-white rounded-xl hover:bg-slate-800 font-semibold text-sm shadow-md shadow-slate-900/10 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                                     Print Pass
-                                </button>
-                                <button
-                                    onClick={() => setShowPassModal(false)}
-                                    className="flex-1 border border-slate-200 text-slate-700 py-2.5 rounded-xl hover:bg-slate-50 font-medium transition-colors"
-                                >
-                                    Close
                                 </button>
                             </div>
                         </div>
