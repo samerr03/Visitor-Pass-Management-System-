@@ -121,8 +121,8 @@ const getDashboardStats = async (req, res) => {
         createdAt: { $gte: today },
     });
 
-    const activePasses = await Visitor.countDocuments({ status: 'active' });
-    const completedVisits = await Visitor.countDocuments({ status: 'completed' });
+    const activePasses = await Visitor.countDocuments({ status: 'ACTIVE' });
+    const completedVisits = await Visitor.countDocuments({ status: 'USED' });
     const totalSecurityStaff = await User.countDocuments({ role: 'security' });
 
     res.json({

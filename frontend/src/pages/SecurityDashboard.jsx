@@ -88,7 +88,7 @@ const SecurityDashboard = () => {
 
     const fetchActiveVisitors = async () => {
         try {
-            const res = await api.get('/visitors?status=active');
+            const res = await api.get('/visitors?status=ACTIVE');
             if (Array.isArray(res.data)) {
                 setActiveVisitors(res.data);
             } else {
@@ -104,7 +104,7 @@ const SecurityDashboard = () => {
     // Search active visitors
     const searchActiveVisitors = async (keyword) => {
         try {
-            const res = await api.get(`/visitors?status=active&keyword=${keyword}`);
+            const res = await api.get(`/visitors?status=ACTIVE&keyword=${keyword}`);
             if (Array.isArray(res.data)) {
                 setActiveVisitors(res.data);
             } else {

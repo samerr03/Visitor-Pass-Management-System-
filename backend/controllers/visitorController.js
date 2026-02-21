@@ -10,9 +10,9 @@ const getAllVisitors = async (req, res, next) => {
         const { status, keyword } = req.query;
         let query = {};
 
-        // Filter by status if provided (active/completed)
+        // Filter by status if provided (ACTIVE/USED)
         if (status) {
-            query.status = status.toLowerCase();
+            query.status = status.toUpperCase();
         }
 
         // Search by keyword (name, phone, passId)
@@ -78,6 +78,7 @@ const createVisitor = async (req, res, next) => {
             photo, // Save photo path
             passId,
             cardGenerated: true,
+            status: 'ACTIVE',
             createdBy: req.user._id,
             demoSessionId: req.user.demoSessionId ? req.user.demoSessionId : null,
         });
@@ -103,12 +104,13 @@ const markExit = async (req, res, next) => {
             return res.status(404).json({ message: 'Visitor not found' });
         }
 
-        if (visitor.status === 'completed') {
-            return res.status(400).json({ message: 'Visitor already checked out' });
+        if (visitor.status === 'USED' || visitor.status === 'EXPIRED') {
+            return res.status(400).json({ message: 'Visitor already checked out or expired' });
         }
 
         visitor.exitTime = Date.now();
-        visitor.status = 'completed';
+        visitor.status = 'USED';
+
         await visitor.save();
 
         // Audit Log

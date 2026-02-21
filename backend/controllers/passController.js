@@ -15,10 +15,15 @@ const getPassStatus = async (req, res, next) => {
         }
 
         // Dynamic Expiry Check
-        if (visitor.passStatus === 'ACTIVE' && visitor.expiryTime < new Date()) {
-            visitor.passStatus = 'EXPIRED';
+        if (visitor.status === 'ACTIVE' && visitor.expiryTime < new Date()) {
+            visitor.status = 'EXPIRED';
             await visitor.save(); // auto-update state
         }
+
+        // Disable caching explicitly on the backend response
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
 
         res.json(visitor);
     } catch (error) {
@@ -46,22 +51,21 @@ const updatePassStatus = async (req, res, next) => {
         }
 
         // Check if expired
-        if (visitor.passStatus === 'ACTIVE' && visitor.expiryTime < new Date()) {
-            visitor.passStatus = 'EXPIRED';
+        if (visitor.status === 'ACTIVE' && visitor.expiryTime < new Date()) {
+            visitor.status = 'EXPIRED';
             await visitor.save();
             return res.status(400).json({ message: 'Pass has expired', visitor });
         }
 
         // If trying to use an already used/expired pass
-        if (visitor.passStatus !== 'ACTIVE' && status === 'USED') {
-            return res.status(400).json({ message: `Pass is already ${visitor.passStatus.toLowerCase()}` });
+        if (visitor.status !== 'ACTIVE' && status === 'USED') {
+            return res.status(400).json({ message: `Pass is already ${visitor.status.toLowerCase()}` });
         }
 
-        visitor.passStatus = status;
+        visitor.status = status;
 
         // If checking in, make sure normal status is active
         if (status === 'USED') {
-            visitor.status = 'active'; // ensuring base system state
             // Audit Log
             await logAction(req, 'UPDATE', visitor, `Pass Checked-In (${passId})`);
         }

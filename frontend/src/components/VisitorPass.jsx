@@ -84,7 +84,7 @@ const VisitorPass = ({ visitor, innerRef }) => {
         }
     };
 
-    const currentStatus = visitor.passStatus || 'ACTIVE';
+    const currentStatus = visitor.status || 'ACTIVE';
 
     return (
         <div className="w-full h-full flex justify-center items-center py-4 print:p-0 print:block print:w-auto print:h-auto">

@@ -224,8 +224,8 @@ const AdminVisitors = () => {
                             className="bg-transparent text-sm text-slate-700 outline-none cursor-pointer font-medium"
                         >
                             <option value="all">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="completed">Completed</option>
+                            <option value="ACTIVE">Active</option>
+                            <option value="USED">Completed (Used)</option>
                         </select>
                     </div>
                 </div>
@@ -304,11 +304,11 @@ const AdminVisitors = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${visitor.status === 'active'
+                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${visitor.status === 'ACTIVE'
                                                 ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                                                 : 'bg-slate-100 text-slate-500 border border-slate-200'
                                                 }`}>
-                                                <span className={`w-1.5 h-1.5 rounded-full ${visitor.status === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${visitor.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
                                                 {visitor.status}
                                             </span>
                                         </td>

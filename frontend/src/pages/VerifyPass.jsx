@@ -50,7 +50,13 @@ const VerifyPass = () => {
         setLoading(true);
         setError(null);
         try {
-            const res = await api.get(`/passes/${passId}`);
+            const res = await api.get(`/passes/${passId}`, {
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            });
             setVisitor(res.data);
         } catch (err) {
             console.error(err);
@@ -137,7 +143,7 @@ const VerifyPass = () => {
 
     if (!visitor) return null;
 
-    const currentStatus = visitor.passStatus || 'ACTIVE';
+    const currentStatus = visitor.status || 'ACTIVE';
     const isSecurityOrAdmin = userRole === 'security' || userRole === 'admin';
 
     // Status mapping UI

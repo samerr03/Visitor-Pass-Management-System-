@@ -46,7 +46,7 @@ const visitorSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
     },
-    passStatus: {
+    status: {
         type: String,
         enum: ['ACTIVE', 'USED', 'EXPIRED'],
         default: 'ACTIVE',
@@ -56,12 +56,6 @@ const visitorSchema = new mongoose.Schema({
         type: Date,
         // Default expiry is 24 hours from creation
         default: () => new Date(Date.now() + 24 * 60 * 60 * 1000)
-    },
-    status: {
-        type: String,
-        enum: ['active', 'completed'],
-        default: 'active',
-        index: true,
     },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
