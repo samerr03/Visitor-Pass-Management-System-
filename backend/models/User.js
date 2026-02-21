@@ -52,6 +52,12 @@ const userSchema = new mongoose.Schema({
     demoSessionId: {
         type: String, // Stores the unique session ID for demo users
     },
+    resetPasswordToken: {
+        type: String,
+    },
+    resetPasswordExpire: {
+        type: Date,
+    },
 }, { timestamps: true });
 
 // Hash password before saving

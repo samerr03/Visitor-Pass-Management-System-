@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Navigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useAuth from '../hooks/useAuth';
 import logo from '../assets/shield-logo.png'; // Import Shield Logo
@@ -210,7 +210,7 @@ const Login = ({ role }) => {
                                     <span className="ml-2.5 text-white/60 group-hover:text-white transition-colors">Remember me</span>
                                 </div>
                             </label>
-                            <a href="#" className={`text-${roleColor}-400 hover:text-white font-medium transition-colors`}>Forgot password?</a>
+                            <Link to="/forgot-password" className={`text-${roleColor}-400 hover:text-white font-medium transition-colors`}>Forgot password?</Link>
                         </div>
 
                         {/* Submit Button */}

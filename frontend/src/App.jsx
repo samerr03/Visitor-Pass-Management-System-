@@ -11,6 +11,8 @@ import MyIDCard from './pages/MyIDCard';
 import AuditLogs from './pages/AuditLogs';
 import AdminVisitors from './pages/AdminVisitors';
 import VerifyPass from './pages/VerifyPass';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import { AuthProvider } from './context/AuthContext';
 
 function App() {
@@ -42,6 +44,8 @@ function App() {
 
           <Route path="/" element={<RoleSelection />} />
           <Route path="/verify/:passId" element={<VerifyPass />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
