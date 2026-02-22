@@ -1,82 +1,85 @@
-import { createContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../api/axios';
+import { createContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../api/axios";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(() => {
-        const storedUser = localStorage.getItem('user');
+        const storedUser = localStorage.getItem("user");
         return storedUser ? JSON.parse(storedUser) : null;
     });
-    const [loading, setLoading] = useState(false); // Start false since we check localStorage synchronously
+
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        // Optional: Verify token with backend here if needed
+        // optional: token verify logic later
     }, []);
 
+    // ✅ FIXED LOGIN
     const login = async (email, password) => {
-        const res = await api.post('/auth/login', { email, password });
-        localStorage.setItem('token', res.data.token);
-        localStorage.setItem('user', JSON.stringify(res.data));
-        setUser(res.data);
-        return res.data;
+        const res = await api.post("/auth/login", { email, password });
+
+        // Most common backend response: { token, user }
+        const token = res.data?.token;
+        const userData = res.data?.user ?? res.data; // fallback if backend returns user directly
+
+        if (token) {
+            localStorage.setItem("token", token);
+            api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        } else {
+            // If backend doesn't return token, remove any old token
+            localStorage.removeItem("token");
+            api.defaults.headers.common["Authorization"] = null;
+        }
+
+        localStorage.setItem("user", JSON.stringify(userData));
+        setUser(userData);
+
+        return userData;
     };
 
     const navigate = useNavigate();
 
     const logout = async (shouldRedirect = true) => {
-        // Handle event object or boolean
-        const redirect = typeof shouldRedirect === 'boolean' ? shouldRedirect : true;
+        const redirect = typeof shouldRedirect === "boolean" ? shouldRedirect : true;
 
-        // Try to get role from state, or fallback to localStorage if state is stale/null
+        // role from state or localStorage
         let role = user?.role;
         if (!role) {
-            const storedUser = localStorage.getItem('user');
+            const storedUser = localStorage.getItem("user");
             if (storedUser) {
                 try {
                     const parsed = JSON.parse(storedUser);
-                    role = parsed.role;
-                    console.log("Recovered role from localStorage:", role);
+                    role = parsed?.role;
                 } catch (e) {
                     console.error("Failed to parse user from localStorage", e);
                 }
             }
         }
 
-        // Normalize role
         const normalizedRole = role ? role.toLowerCase() : null;
         console.log("Logout triggered. Role:", normalizedRole);
 
-        // Perform Redirect FIRST to avoid ProtectedRoute race condition
-        // (ProtectedRoute redirects to '/' if user becomes null)
+        // Redirect first (your existing logic)
         if (redirect) {
-            if (normalizedRole === 'admin') {
-                console.log("Redirecting to /admin/login");
-                navigate('/admin/login', { replace: true });
-            } else if (normalizedRole === 'security') {
-                console.log("Redirecting to /security/login");
-                navigate('/security/login', { replace: true });
-            } else {
-                console.log("Redirecting to / (fallback)");
-                navigate('/', { replace: true });
-            }
+            if (normalizedRole === "admin") navigate("/admin/login", { replace: true });
+            else if (normalizedRole === "security") navigate("/security/login", { replace: true });
+            else navigate("/", { replace: true });
         }
 
+        // Call backend logout (safe even if fails)
         try {
-            await api.post('/auth/logout');
+            await api.post("/auth/logout");
         } catch (err) {
-            console.error(err);
+            console.error("Logout API failed:", err);
         }
 
-        // Clear all auth data AFTER navigation logic initiated
-        // Note: The destination page (Login.jsx) also calls logout(false) to ensure cleanup
-        setTimeout(() => {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            setUser(null);
-            api.defaults.headers.common['Authorization'] = null;
-        }, 100);
+        // Clear local auth
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setUser(null);
+        api.defaults.headers.common["Authorization"] = null;
     };
 
     return (

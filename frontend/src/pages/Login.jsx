@@ -24,7 +24,9 @@ const Login = ({ role }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        logout(false);
+        // Only clear local storage on role change; don't call API logout
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
     }, [roleParam]);
 
     const getTitle = () => {
