@@ -48,14 +48,18 @@ const loginUser = async (req, res, next) => {
         let { email, password } = req.body;
         email = email.toLowerCase().trim();
         console.log(`[Login Attempt] Email: ${email}`);
+        console.log("Email:", email);
 
         const User = getProdUser();
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).select('+password');
 
         if (!user) {
             console.log('[Login Failed] User not found');
             return res.status(401).json({ message: 'Invalid credentials' });
         }
+
+        console.log("Has matchPassword?", typeof user.matchPassword);
+        console.log("Password field length:", user.password?.length);
 
         // Check if demo user account matches strict demo password if needed, 
         // but robust hash check matches anyway.
@@ -77,12 +81,14 @@ const loginUser = async (req, res, next) => {
         // --------------------------
 
         res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            isDemo: user.isDemo,
-            demoSessionId: user.demoSessionId, // Optional: send to frontend if needed
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                isDemo: user.isDemo,
+                demoSessionId: user.demoSessionId, // Optional: send to frontend if needed
+            },
             token: generateToken(user._id),
         });
 

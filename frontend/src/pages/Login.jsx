@@ -1,71 +1,81 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, Navigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import useAuth from '../hooks/useAuth';
-import logo from '../assets/shield-logo.png'; // Import Shield Logo
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams, Navigate, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import useAuth from "../hooks/useAuth";
+import logo from "../assets/shield-logo.png";
 
 const Login = ({ role }) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [focusedField, setFocusedField] = useState(null);
 
     // Get role from props OR URL query params
     const [searchParams] = useSearchParams();
-    const roleParam = role || searchParams.get('role'); // 'admin' or 'security'
+    const roleParamRaw = role || searchParams.get("role"); // 'admin' or 'security'
+    const roleParam = (roleParamRaw || "").toLowerCase();
 
+    const navigate = useNavigate();
+    const { login } = useAuth(); // logout not needed here now
+
+    // If no role provided, go home
     if (!roleParam) {
         return <Navigate to="/" replace />;
     }
 
-    const { login, logout } = useAuth();
-    const navigate = useNavigate();
-
+    // On role change, clear local auth only (no API logout call)
     useEffect(() => {
-        // Only clear local storage on role change; don't call API logout
         localStorage.removeItem("token");
         localStorage.removeItem("user");
     }, [roleParam]);
 
     const getTitle = () => {
-        if (roleParam === 'admin') return 'Admin Portal';
-        if (roleParam === 'security') return 'Security Access';
-        return 'Welcome Back';
+        if (roleParam === "admin") return "Admin Portal";
+        if (roleParam === "security") return "Security Access";
+        return "Welcome Back";
     };
 
     const getRoleColor = () => {
-        if (roleParam === 'admin') return 'blue';
-        if (roleParam === 'security') return 'emerald';
-        return 'purple';
+        if (roleParam === "admin") return "blue";
+        if (roleParam === "security") return "emerald";
+        return "purple";
     };
 
     const roleColor = getRoleColor();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
+        setError("");
         setIsLoading(true);
+
         try {
             const user = await login(email, password);
 
-            if (roleParam && user.role !== roleParam) {
-                logout();
-                setError(`Access Denied: You cannot login as ${user.role} here.`);
+            const userRole = (user?.role || "").toLowerCase();
+            const expectedRole = roleParam;
+
+            // Role mismatch => clear local auth and show error (DON'T auto logout API)
+            if (expectedRole && userRole !== expectedRole) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+
+                setError(`Access Denied: You cannot login as ${userRole || "unknown"} here.`);
                 setIsLoading(false);
                 return;
             }
 
-            if (user.role === 'admin') navigate('/admin', { replace: true });
-            else if (user.role === 'security') navigate('/security', { replace: true });
+            // Navigate by role
+            if (userRole === "admin") navigate("/admin", { replace: true });
+            else if (userRole === "security") navigate("/security", { replace: true });
             else {
-                setError('Unauthorized access: Unknown role');
+                setError("Unauthorized access: Unknown role");
                 setIsLoading(false);
             }
         } catch (err) {
             console.error("Login Error:", err);
-            setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
+            setError(err.response?.data?.message || "Invalid credentials. Please try again.");
             setIsLoading(false);
         }
     };
@@ -74,19 +84,17 @@ const Login = ({ role }) => {
         <div className="flex items-center justify-center min-h-screen relative overflow-hidden font-sans bg-[#0B0F19]">
             {/* Background Image & Overlay */}
             <div className="absolute inset-0 z-0 overflow-hidden">
-                {/* Background Image - Modern Corporate Office */}
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 scale-105 pointer-events-none"
-                    style={{ backgroundImage: "url('https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2301')" }}
+                    style={{
+                        backgroundImage:
+                            "url('https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2301')",
+                    }}
                 ></div>
 
-                {/* Dark Gradient Overlay for Readability */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/45 to-black/70 backdrop-blur-[2px]"></div>
-
-                {/* Noise Texture */}
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
 
-                {/* Animated Orbs (Subtle) */}
                 <motion.div
                     animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
                     transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
@@ -99,7 +107,6 @@ const Login = ({ role }) => {
                     className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-indigo-900/20 rounded-full blur-[100px] mix-blend-screen"
                 ></motion.div>
 
-                {/* Center Glow */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px]"></div>
             </div>
 
@@ -109,19 +116,15 @@ const Login = ({ role }) => {
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="relative z-10 w-full max-w-sm px-4 mx-auto"
             >
-                {/* Premium Glass Card */}
                 <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl px-6 py-7 relative overflow-hidden transition-all duration-500">
-
-                    {/* Top Accent Line */}
                     <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-blue-500/50 via-purple-500/50 to-blue-500/50 opacity-80"></div>
 
-                    {/* Branding Header */}
                     <div className="text-center mb-5 flex flex-col items-center">
                         <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1 drop-shadow-md mt-2">
                             {getTitle()}
                         </h1>
                         <p className="text-white/70 text-xs font-medium tracking-wide mb-4">
-                            {roleParam ? `Please login to continue as ${roleParam}` : 'Sign in to access your dashboard'}
+                            {roleParam ? `Please login to continue as ${roleParam}` : "Sign in to access your dashboard"}
                         </p>
                     </div>
 
@@ -131,19 +134,33 @@ const Login = ({ role }) => {
                             animate={{ opacity: 1, height: "auto" }}
                             className="mb-4 bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-start gap-2 backdrop-blur-md"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                    clipRule="evenodd"
+                                />
                             </svg>
                             <span className="text-xs text-red-200 font-medium">{error}</span>
                         </motion.div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        {/* Email Field */}
+                        {/* Email */}
                         <div className="space-y-1">
-                            <label htmlFor="email" className="text-[10px] font-bold text-white/60 ml-1 tracking-wide uppercase">Email Address</label>
+                            <label htmlFor="email" className="text-[10px] font-bold text-white/60 ml-1 tracking-wide uppercase">
+                                Email Address
+                            </label>
                             <div className="relative group flex items-center">
-                                <div className={`absolute left-3.5 flex items-center pointer-events-none transition-colors duration-300 ${focusedField === 'email' ? 'text-white' : 'text-white/40'}`}>
+                                <div
+                                    className={`absolute left-3.5 flex items-center pointer-events-none transition-colors duration-300 ${focusedField === "email" ? "text-white" : "text-white/40"
+                                        }`}
+                                >
                                     <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                     </svg>
@@ -156,18 +173,23 @@ const Login = ({ role }) => {
                                     placeholder="name@company.com"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value.toLowerCase().trim())}
-                                    onFocus={() => setFocusedField('email')}
+                                    onFocus={() => setFocusedField("email")}
                                     onBlur={() => setFocusedField(null)}
                                     required
                                 />
                             </div>
                         </div>
 
-                        {/* Password Field */}
+                        {/* Password */}
                         <div className="space-y-1">
-                            <label htmlFor="password" className="text-[10px] font-bold text-white/60 ml-1 tracking-wide uppercase">Password</label>
+                            <label htmlFor="password" className="text-[10px] font-bold text-white/60 ml-1 tracking-wide uppercase">
+                                Password
+                            </label>
                             <div className="relative group flex items-center">
-                                <div className={`absolute left-3.5 flex items-center pointer-events-none transition-colors duration-300 ${focusedField === 'password' ? 'text-white' : 'text-white/40'}`}>
+                                <div
+                                    className={`absolute left-3.5 flex items-center pointer-events-none transition-colors duration-300 ${focusedField === "password" ? "text-white" : "text-white/40"
+                                        }`}
+                                >
                                     <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                     </svg>
@@ -180,7 +202,7 @@ const Login = ({ role }) => {
                                     placeholder="••••••••"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    onFocus={() => setFocusedField('password')}
+                                    onFocus={() => setFocusedField("password")}
                                     onBlur={() => setFocusedField(null)}
                                     required
                                 />
@@ -199,12 +221,12 @@ const Login = ({ role }) => {
                             </div>
                         </div>
 
-                        {/* Actions Row */}
+                        {/* Actions */}
                         <div className="flex items-center justify-between text-[11px] sm:text-xs">
                             <label className="flex items-center cursor-pointer group">
                                 <div className="relative flex items-center">
                                     <input type="checkbox" className="peer sr-only" />
-                                    <div className={`w-3.5 h-3.5 border border-white/20 rounded bg-white/5 peer-checked:bg-${roleColor}-500 peer-checked:border-${roleColor}-500 transition-all flex items-center justify-center`}>
+                                    <div className="w-3.5 h-3.5 border border-white/20 rounded bg-white/5 transition-all flex items-center justify-center">
                                         <svg className="w-2.5 h-2.5 text-white hidden peer-checked:block pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                         </svg>
@@ -212,19 +234,21 @@ const Login = ({ role }) => {
                                     <span className="ml-2.5 text-white/60 group-hover:text-white transition-colors">Remember me</span>
                                 </div>
                             </label>
-                            <Link to="/forgot-password" className={`text-${roleColor}-400 hover:text-white font-medium transition-colors`}>Forgot password?</Link>
+                            <Link to="/forgot-password" className={`text-${roleColor}-400 hover:text-white font-medium transition-colors`}>
+                                Forgot password?
+                            </Link>
                         </div>
 
-                        {/* Submit Button */}
+                        {/* Submit */}
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className={`w-full h-11 mt-1 rounded-xl text-white font-semibold text-[13px] uppercase tracking-wider flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all duration-200
-                                ${roleParam === 'admin' ? 'bg-gradient-to-r from-blue-600 to-indigo-600' :
-                                    roleParam === 'security' ? 'bg-gradient-to-r from-emerald-600 to-teal-600' :
-                                        'bg-gradient-to-r from-violet-600 to-fuchsia-600'
-                                }
-                            `}
+                            className={`w-full h-11 mt-1 rounded-xl text-white font-semibold text-[13px] uppercase tracking-wider flex items-center justify-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all duration-200 ${roleParam === "admin"
+                                    ? "bg-gradient-to-r from-blue-600 to-indigo-600"
+                                    : roleParam === "security"
+                                        ? "bg-gradient-to-r from-emerald-600 to-teal-600"
+                                        : "bg-gradient-to-r from-violet-600 to-fuchsia-600"
+                                }`}
                         >
                             {isLoading ? (
                                 <>
@@ -240,55 +264,12 @@ const Login = ({ role }) => {
                         </button>
                     </form>
 
-                    {/* Role Hints */}
-                    {!roleParam && (
-                        <div className="mt-5 pt-3 border-t border-white/5 flex justify-center gap-4 text-[9px] text-slate-500 uppercase tracking-wider font-semibold">
-                            <span>Login as:</span>
-                            <span className="text-blue-400">Admin</span>
-                            <span className="text-emerald-400">Security</span>
-                            <span className="text-purple-400">Staff</span>
-                        </div>
-                    )}
-
-                    {/* Demo Mode Quick Access */}
-                    <div className="mt-5 pt-4 border-t border-white/10">
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="h-px bg-white/10 flex-grow"></div>
-                            <span className="text-[9px] text-white/50 uppercase tracking-widest font-bold">Safe Demo Mode</span>
-                            <div className="h-px bg-white/10 flex-grow"></div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setEmail('demo_admin@demo.com');
-                                    setPassword('demo_password');
-                                }}
-                                className="h-10 rounded-xl bg-transparent border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all flex flex-col items-center justify-center text-white/70 hover:text-white group"
-                            >
-                                <span className="uppercase tracking-widest text-[8px] opacity-70 group-hover:opacity-100">Admin Demo</span>
-                                <span className="font-semibold text-[10px] text-white">Auto-Fill</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setEmail('demo_security@demo.com');
-                                    setPassword('demo_password');
-                                }}
-                                className="h-10 rounded-xl bg-transparent border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all flex flex-col items-center justify-center text-white/70 hover:text-white group"
-                            >
-                                <span className="uppercase tracking-widest text-[8px] opacity-70 group-hover:opacity-100">Security Demo</span>
-                                <span className="font-semibold text-[10px] text-white">Auto-Fill</span>
-                            </button>
-                        </div>
+                    {/* Footer */}
+                    <div className="mt-8 text-center">
+                        <p className="text-xs text-slate-500 font-medium tracking-wide">
+                            &copy; 2026 <span className="text-slate-300 font-bold">VMS</span> — Secure Visitor Management
+                        </p>
                     </div>
-                </div>
-
-                {/* Footer */}
-                <div className="mt-8 text-center">
-                    <p className="text-xs text-slate-500 font-medium tracking-wide">
-                        &copy; 2026 <span className="text-slate-300 font-bold">VMS</span> — Secure Visitor Management
-                    </p>
                 </div>
             </motion.div>
         </div>
