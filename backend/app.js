@@ -11,6 +11,8 @@ const auditRoutes = require("./routes/auditRoutes");
 
 const app = express();
 
+// Trust reverse proxy (AWS ELB/CloudFront/Nginx) for rate-limiting X-Forwarded-For header
+app.set('trust proxy', 1);
 
 // Connect MongoDB
 // Connect MongoDB - Handled in server.js via config/db.js

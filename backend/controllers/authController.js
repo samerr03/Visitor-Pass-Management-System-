@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const { getProdConnection } = require('../config/db');
 const { getModels } = require('../models/ModelFactory');
 const sendEmail = require('../utils/sendEmail');
@@ -60,11 +61,10 @@ const loginUser = async (req, res, next) => {
 
         console.log("Has matchPassword?", typeof user.matchPassword);
         console.log("Password field length:", user.password?.length);
-
-        // Check if demo user account matches strict demo password if needed, 
-        // but robust hash check matches anyway.
+        console.log("Email:", email);
 
         const isMatch = await user.matchPassword(password);
+        console.log("Password match result:", isMatch);
 
         if (!isMatch) {
             console.log('[Login Failed] Password mismatch');
@@ -293,6 +293,25 @@ const resetPassword = async (req, res, next) => {
     }
 };
 
+// Debug User
+const debugUser = async (req, res, next) => {
+    try {
+        const email = req.params.email.toLowerCase().trim();
+        const User = getProdUser();
+        const user = await User.findOne({ email }).select('+password');
+
+        if (!user) {
+            return res.json({ exists: false });
+        }
+        res.json({
+            exists: true,
+            passwordLength: user.password ? user.password.length : 0
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     seedAdmin,
     loginUser,
@@ -302,5 +321,6 @@ module.exports = {
     updatePassword,
     updateProfilePhoto,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    debugUser
 };

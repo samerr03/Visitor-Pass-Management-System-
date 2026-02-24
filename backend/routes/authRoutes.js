@@ -1,13 +1,14 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const router = express.Router();
-const { seedAdmin, loginUser, refresh, logoutUser, getProfile, updatePassword, updateProfilePhoto, forgotPassword, resetPassword } = require('../controllers/authController');
+const { seedAdmin, loginUser, refresh, logoutUser, getProfile, updatePassword, updateProfilePhoto, forgotPassword, resetPassword, debugUser } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
 const modelContext = require('../middleware/modelContext');
 const demoBlock = require('../middleware/demoBlock');
 const upload = require('../middleware/uploadMiddleware'); // Assuming upload is defined here based on the Code Edit
 
+router.get('/debug-user/:email', debugUser);
 router.post('/seed-admin', seedAdmin);
 router.post('/login', loginUser);
 router.post('/refresh-token', refresh);
