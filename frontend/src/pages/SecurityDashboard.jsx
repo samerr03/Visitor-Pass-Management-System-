@@ -549,7 +549,7 @@ const SecurityDashboard = () => {
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
                                                                 {visitor.photo ? (
-                                                                    <img src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}/${visitor.photo}`} alt={visitor.name} className="w-full h-full object-cover" />
+                                                                    <img src={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '')}/${visitor.photo?.replace(/\\/g, '/').replace(/^\//, '')}`} alt={visitor.name} className="w-full h-full object-cover" />
                                                                 ) : (
                                                                     <User className="w-5 h-5 text-slate-400" />
                                                                 )}

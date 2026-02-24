@@ -82,11 +82,12 @@ const StaffProfile = () => {
             return user.photoUrl;
         }
         if (user.photo) {
-            const BASE_URL = 'http://localhost:5000';
+            const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+            const HOST = API_BASE.replace(/\/api\/?$/, '');
             if (user.photo.startsWith('http')) return user.photo;
             // Remove leading slash if any to avoid double slash with base url
             const cleanPath = user.photo.replace(/\\/g, '/').replace(/^\//, '');
-            const finalUrl = `${BASE_URL}/${cleanPath}`;
+            const finalUrl = `${HOST}/${cleanPath}`;
 
             return finalUrl;
         }
