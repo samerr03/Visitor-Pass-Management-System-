@@ -29,7 +29,12 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], // Allow frontend
+    origin: [
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+        'https://d3rhxd4jwoeunz.cloudfront.net',
+        process.env.FRONTEND_URL
+    ].filter(Boolean), // Filter out undefined if FRONTEND_URL is not set
     credentials: true,
 }));
 
