@@ -15,7 +15,15 @@ const api = axios.create({
 });
 
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // If the API returns HTML instead of JSON, reject it.
+        // This prevents AWS CloudFront 404s (which return index.html as a 200 OK) from being parsed as success.
+        const contentType = response.headers?.['content-type'];
+        if (contentType && contentType.includes('text/html')) {
+            return Promise.reject(new Error("API reached a frontend page (CloudFront 404 fallback). Check API URL config or CloudFront Behaviors."));
+        }
+        return response;
+    },
     async (error) => {
         const originalRequest = error.config;
 
