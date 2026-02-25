@@ -86,15 +86,13 @@ const StaffProfile = () => {
     const getPhotoUrl = () => {
         if (user.photo) {
             const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-            const HOST = API_BASE.replace(/\/api\/?$/, '');
-            if (user.photo.startsWith('http')) return user.photo;
-            // Remove leading slash if any to avoid double slash with base url
+            const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
+            if (user.photo.startsWith('http')) return `${user.photo}?t=${Date.now()}`;
+            // Remove leading slash if any
             const cleanPath = user.photo.replace(/\\/g, '/').replace(/^\//, '');
-            const finalUrl = `${HOST}/${cleanPath}`;
-
-            return finalUrl;
+            return `${base}/${cleanPath}?t=${Date.now()}`;
         }
-        return null;
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=0D8ABC&color=fff&size=200`;
     };
 
     if (!user && !fetchError) return (
@@ -128,7 +126,7 @@ const StaffProfile = () => {
                     <div className="w-32 h-32 rounded-full bg-gray-200 overflow-hidden mb-4 border-4 border-blue-100 shadow-sm">
                         {user.photo || user.photoUrl ? (
                             <img
-                                src={getPhotoUrl() ? `${getPhotoUrl()}?t=${Date.now()}` : null}
+                                src={getPhotoUrl()}
                                 alt={user.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {

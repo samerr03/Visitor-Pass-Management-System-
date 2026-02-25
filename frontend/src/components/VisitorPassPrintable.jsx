@@ -26,8 +26,8 @@ const VisitorPassPrintable = forwardRef(({ visitor }, ref) => {
     const API_BASE_URL =
         import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-    // uploads are served from host (without /api)
-    const HOST = API_BASE_URL.replace(/\/api\/?$/, "");
+    // Keep base intact to route through CloudFront API behavior
+    const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
 
     // Helper for safe date formatting
     const formatDate = (dateString) => {
@@ -68,7 +68,7 @@ const VisitorPassPrintable = forwardRef(({ visitor }, ref) => {
             }
 
             if (filename) {
-                return `${HOST}/uploads/${filename}`;
+                return `${base}/uploads/${filename}`;
             }
         } catch (e) {
             console.error("Error processing photo URL", e);

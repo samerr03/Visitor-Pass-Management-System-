@@ -9,13 +9,13 @@ const StaffCard = forwardRef(({ user }, ref) => {
     const getPhotoUrl = () => {
         if (user.photo) {
             const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-            const baseURL = API_BASE.replace(/\/api\/?$/, '');
-            if (user.photo.startsWith('http')) return user.photo;
-            // Otherwise prepend base URL
+            const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
+            if (user.photo.startsWith('http')) return `${user.photo}?t=${Date.now()}`;
+            // Otherwise prepend base URL API
             const cleanPath = user.photo.replace(/\\/g, '/').replace(/^\//, '');
-            return `${baseURL}/${cleanPath}`;
+            return `${base}/${cleanPath}?t=${Date.now()}`;
         }
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=0D8ABC&color=fff&size=200`;
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=0D8ABC&color=fff&size=200`;
     };
 
     return (
@@ -48,14 +48,9 @@ const StaffCard = forwardRef(({ user }, ref) => {
                         {/* Photo Container */}
                         <div className="w-full h-full rounded-full border-[4px] border-white ring-2 ring-blue-100 shadow-xl overflow-hidden bg-white">
                             <img
-                                src={getPhotoUrl() ? `${getPhotoUrl()}?t=${Date.now()}` : null}
+                                src={getPhotoUrl()}
                                 alt={user.name}
                                 className="w-full h-full object-cover"
-                                onError={(e) => {
-                                    e.target.onerror = null;
-                                    e.target.style.display = 'none';
-                                    e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-gray-400 font-bold bg-slate-100 text-4xl">${user.name.charAt(0)}</div>`;
-                                }}
                             />
                         </div>
                         {/* Verified Badge */}
