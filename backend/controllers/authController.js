@@ -178,12 +178,16 @@ const updateProfilePhoto = async (req, res, next) => {
         const user = await User.findById(req.user._id);
 
         if (user) {
-            // Force forward slashes for cross-platform consistency
-            const normalizedPath = `uploads/${req.file.filename}`;
+            // Force forward slashes and ensure root relative path
+            const normalizedPath = `/uploads/${req.file.filename}`;
             user.photo = normalizedPath;
             await user.save();
 
-            const photoUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/${normalizedPath}`;
+            // Use BASE_URL safely (removing trailing slash if necessary)
+            const baseUrl = (process.env.BASE_URL || 'http://localhost:5000').replace(/\/$/, '');
+            const photoUrl = `${baseUrl}${normalizedPath}`;
+
+            console.log(`[Update Profile Photo] Saved Path: ${user.photo}`); // DEBUG
 
             res.json({
                 message: 'Photo updated successfully',

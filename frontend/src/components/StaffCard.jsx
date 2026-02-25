@@ -8,7 +8,8 @@ const StaffCard = forwardRef(({ user }, ref) => {
     const getPhotoUrl = () => {
         if (user.photoUrl) return user.photoUrl;
         if (user.photo) {
-            const baseURL = 'http://localhost:5000';
+            const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+            const baseURL = API_BASE.replace(/\/api\/?$/, '');
             if (user.photo.startsWith('http')) return user.photo;
             // Otherwise prepend base URL
             const cleanPath = user.photo.replace(/\\/g, '/').replace(/^\//, '');
