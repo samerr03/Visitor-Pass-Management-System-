@@ -1,12 +1,12 @@
 import React, { forwardRef } from 'react';
 import Barcode from 'react-barcode';
+import logo from '../assets/shield-logo.png';
 
 const StaffCard = forwardRef(({ user }, ref) => {
     if (!user) return null;
 
     // Construct Photo URL
     const getPhotoUrl = () => {
-        if (user.photoUrl) return user.photoUrl;
         if (user.photo) {
             const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
             const baseURL = API_BASE.replace(/\/api\/?$/, '');
@@ -38,7 +38,7 @@ const StaffCard = forwardRef(({ user }, ref) => {
 
                     {/* Logo & Tagline */}
                     <div className="relative z-10 flex flex-col items-center">
-                        <img src="/src/assets/shield-logo.png" alt="System Logo" className="w-36 h-auto drop-shadow-md" />
+                        <img src={logo} alt="System Logo" className="w-36 h-auto drop-shadow-md" />
                     </div>
                 </div>
 

@@ -77,10 +77,6 @@ const StaffProfile = () => {
 
     // Helper to get photo URL
     const getPhotoUrl = () => {
-        if (user.photoUrl) {
-
-            return user.photoUrl;
-        }
         if (user.photo) {
             const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
             const HOST = API_BASE.replace(/\/api\/?$/, '');
