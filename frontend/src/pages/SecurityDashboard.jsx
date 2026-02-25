@@ -123,7 +123,15 @@ const SecurityDashboard = () => {
             if (!searchTerm) fetchActiveVisitors();
         }, 30000);
 
-        return () => clearInterval(interval);
+        const onFocus = () => {
+            if (!searchTerm) fetchActiveVisitors();
+        };
+        window.addEventListener('focus', onFocus);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('focus', onFocus);
+        };
     }, [searchTerm]);
 
     useEffect(() => {

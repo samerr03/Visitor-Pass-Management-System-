@@ -79,6 +79,10 @@ const StaffManagement = ({ onUpdate, user }) => {
 
     useEffect(() => {
         fetchSecurityUsers();
+
+        const onFocus = () => fetchSecurityUsers();
+        window.addEventListener('focus', onFocus);
+        return () => window.removeEventListener('focus', onFocus);
     }, []);
 
     const fetchSecurityUsers = async () => {

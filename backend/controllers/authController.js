@@ -5,10 +5,17 @@ const { getProdConnection } = require('../config/db');
 const { getModels } = require('../models/ModelFactory');
 const sendEmail = require('../utils/sendEmail');
 
-// Generate Token
+// Generate Token (Short Lived)
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '1d',
+        expiresIn: '15m',
+    });
+};
+
+// Generate Refresh Token (Long Lived)
+const generateRefreshToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: '7d',
     });
 };
 
@@ -80,6 +87,16 @@ const loginUser = async (req, res, next) => {
         }
         // --------------------------
 
+        const accessToken = generateToken(user._id);
+        const refreshToken = generateRefreshToken(user._id);
+
+        res.cookie('jwt', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Use none for cross-origin on AWS
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+
         res.json({
             user: {
                 _id: user._id,
@@ -89,7 +106,7 @@ const loginUser = async (req, res, next) => {
                 isDemo: user.isDemo,
                 demoSessionId: user.demoSessionId, // Optional: send to frontend if needed
             },
-            token: generateToken(user._id),
+            token: accessToken,
         });
 
     } catch (error) {
@@ -98,12 +115,37 @@ const loginUser = async (req, res, next) => {
 };
 
 // Refresh
-const refresh = async (req, res) => {
-    res.json({ message: "Token refresh endpoint" });
+const refresh = async (req, res, next) => {
+    try {
+        const refreshToken = req.cookies.jwt;
+
+        if (!refreshToken) {
+            return res.status(401).json({ message: "No refresh token found" });
+        }
+
+        const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+        // Find user to ensure they still exist/active
+        const User = getProdUser();
+        const user = await User.findById(decoded.id);
+
+        if (!user || (!user.isActive && !user.isDemo)) {
+            return res.status(401).json({ message: "User no longer active or exists" });
+        }
+
+        const accessToken = generateToken(user._id);
+        res.json({ token: accessToken });
+    } catch (error) {
+        // If verify fails (expired, manipulated)
+        return res.status(401).json({ message: "Invalid refresh token" });
+    }
 };
 
 // Logout
 const logoutUser = async (req, res) => {
+    res.cookie('jwt', '', {
+        httpOnly: true,
+        expires: new Date(0),
+    });
     res.json({ message: "Logged out successfully" });
 };
 
