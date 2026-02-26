@@ -1,8 +1,8 @@
 import axios from "axios";
 
 // Vite env (production build time). Example value:
-// VITE_API_BASE_URL=http://54.210.114.254:5000/api
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+// VITE_API_BASE_URL=http://34.229.147.51:5000/api
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // Optional safety: if env missing, throw early instead of silently using localhost
 if (!BASE_URL) {

@@ -85,7 +85,7 @@ const StaffProfile = () => {
     // Helper to get photo URL
     const getPhotoUrl = () => {
         if (user.photo) {
-            const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+            const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
             const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
             if (user.photo.startsWith('http')) return `${user.photo}?t=${Date.now()}`;
             // Remove leading slash if any

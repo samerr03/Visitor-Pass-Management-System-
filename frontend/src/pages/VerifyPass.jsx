@@ -104,7 +104,7 @@ const VerifyPass = () => {
         if (filename.includes("uploads/")) {
             filename = filename.split("uploads/").pop();
         }
-        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
         const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
         return `${base}/uploads/${filename}`;
     };

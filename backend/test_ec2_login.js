@@ -2,7 +2,7 @@ const axios = require('axios');
 
 async function testLogin() {
     try {
-        const res = await axios.post('http://54.210.114.254:5000/api/auth/login', {
+        const res = await axios.post('http://34.229.147.51:5000/api/auth/login', {
             email: 'admin@example.com',
             password: 'password123'
         });

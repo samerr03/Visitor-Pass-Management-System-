@@ -173,7 +173,7 @@ const StaffManagement = ({ onUpdate, user }) => {
     const getPhotoUrl = (photoPath) => {
         if (!photoPath) return null;
         if (photoPath.startsWith('http')) return photoPath;
-        const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+        const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
         const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
         return `${base}/${photoPath.replace(/\\/g, '/').replace(/^\//, '')}`;
     };
