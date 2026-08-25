@@ -1,7 +1,5 @@
 require("dotenv").config();
 
-const express = require("express");
-const path = require("path");
 const app = require("./app");
 
 const {
@@ -12,27 +10,19 @@ const {
 
 const { getModels } = require("./models/ModelFactory");
 
-app.use(
-    "/uploads",
-    express.static(path.join(__dirname, "uploads"))
-);
-
-const PORT = process.env.PORT || 5000;
 const DEMO_ENABLED = process.env.ENABLE_DEMO_DB === "true";
 
 let initialized = false;
 let initializationPromise = null;
 
-const seedUser = async (Model, userData) => {
+const seedUser = async (Model, data) => {
     let user = await Model.findOne({
-        email: userData.email
+        email: data.email
     });
 
     if (!user) {
-        user = await Model.create(userData);
-        console.log(`Created demo user: ${userData.email}`);
-    } else {
-        console.log(`Demo user already exists: ${userData.email}`);
+        user = await Model.create(data);
+        console.log(`Created demo user: ${data.email}`);
     }
 
     return user;
@@ -54,41 +44,6 @@ const syncUserToDemo = async (DemoModel, prodUser) => {
     }
 };
 
-const seedDemoAccounts = async () => {
-    const prodConn = getProdConnection();
-    const ProdModels = getModels(prodConn);
-    const ProdUser = ProdModels.User;
-
-    const demoAdmin = await seedUser(ProdUser, {
-        email: "demo_admin@demo.com",
-        name: "Demo Admin",
-        password: "demo_password",
-        role: "admin",
-        isDemo: true,
-        designation: "System Administrator - Demo"
-    });
-
-    const demoSecurity = await seedUser(ProdUser, {
-        email: "demo_security@demo.com",
-        name: "Demo Security",
-        password: "demo_password",
-        role: "security",
-        isDemo: true,
-        designation: "Front Desk Security - Demo"
-    });
-
-    if (DEMO_ENABLED) {
-        const demoConn = getDemoConnection();
-        const DemoModels = getModels(demoConn);
-        const DemoUser = DemoModels.User;
-
-        await syncUserToDemo(DemoUser, demoAdmin);
-        await syncUserToDemo(DemoUser, demoSecurity);
-
-        console.log("Demo DB accounts synced");
-    }
-};
-
 const initialize = async () => {
     if (initialized) {
         return;
@@ -97,7 +52,37 @@ const initialize = async () => {
     if (!initializationPromise) {
         initializationPromise = (async () => {
             await connectDB();
-            await seedDemoAccounts();
+
+            const prodConn = getProdConnection();
+            const ProdModels = getModels(prodConn);
+            const ProdUser = ProdModels.User;
+
+            const demoAdmin = await seedUser(ProdUser, {
+                email: "demo_admin@demo.com",
+                name: "Demo Admin",
+                password: "demo_password",
+                role: "admin",
+                isDemo: true,
+                designation: "System Administrator - Demo"
+            });
+
+            const demoSecurity = await seedUser(ProdUser, {
+                email: "demo_security@demo.com",
+                name: "Demo Security",
+                password: "demo_password",
+                role: "security",
+                isDemo: true,
+                designation: "Front Desk Security - Demo"
+            });
+
+            if (DEMO_ENABLED) {
+                const demoConn = getDemoConnection();
+                const DemoModels = getModels(demoConn);
+                const DemoUser = DemoModels.User;
+
+                await syncUserToDemo(DemoUser, demoAdmin);
+                await syncUserToDemo(DemoUser, demoSecurity);
+            }
 
             initialized = true;
 
@@ -113,7 +98,7 @@ const handler = async (req, res) => {
         await initialize();
         return app(req, res);
     } catch (error) {
-        console.error("Server initialization error:", error);
+        console.error("Backend initialization error:", error);
 
         return res.status(500).json({
             success: false,
@@ -127,6 +112,8 @@ module.exports = handler;
 if (require.main === module) {
     initialize()
         .then(() => {
+            const PORT = process.env.PORT || 5000;
+
             app.listen(PORT, () => {
                 console.log(`Server running on port ${PORT}`);
             });
