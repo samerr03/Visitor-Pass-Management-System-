@@ -1,12 +1,15 @@
 import axios from "axios";
 
-// Vite env (production build time). Example value:
-// VITE_API_BASE_URL=http://34.229.147.51:5000/api
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// In local dev: use "/api" + Vite proxy
+// In production: keep "/api" only if your hosting rewrites /api -> backend
+// Or set full URL in env: https://backend.com/api
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
-// Optional safety: if env missing, throw early instead of silently using localhost
-if (!BASE_URL) {
-    console.error("VITE_API_BASE_URL is missing. Check frontend/.env.production");
+// If you want to enforce env only in production builds:
+if (import.meta.env.PROD && !import.meta.env.VITE_API_BASE_URL) {
+    console.warn(
+        "VITE_API_BASE_URL is missing in production build. Using '/api'. Make sure your hosting rewrites /api to backend."
+    );
 }
 
 const api = axios.create({
@@ -14,37 +17,54 @@ const api = axios.create({
     withCredentials: true,
 });
 
+// Attach token on every request (if you use Bearer tokens)
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
 api.interceptors.response.use(
     (response) => {
-        // If the API returns HTML instead of JSON, reject it.
-        // This prevents AWS CloudFront 404s (which return index.html as a 200 OK) from being parsed as success.
-        const contentType = response.headers?.['content-type'];
-        if (contentType && contentType.includes('text/html')) {
-            return Promise.reject(new Error("API reached a frontend page (CloudFront 404 fallback). Check API URL config or CloudFront Behaviors."));
+        const contentType = response.headers?.["content-type"];
+        if (contentType && contentType.includes("text/html")) {
+            return Promise.reject(
+                new Error(
+                    "API reached a frontend HTML page (possible CloudFront fallback). Check /api routing (rewrites/behaviors) or API base URL."
+                )
+            );
         }
         return response;
     },
     async (error) => {
-        const originalRequest = error.config;
-
+        const originalRequest = error.config || {};
         const url = originalRequest?.url || "";
+
         const isAuthEndpoint =
             url.includes("/auth/login") ||
             url.includes("/auth/logout") ||
             url.includes("/auth/refresh-token");
 
-        if (error.response && error.response.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
+        if (
+            error.response?.status === 401 &&
+            !originalRequest._retry &&
+            !isAuthEndpoint
+        ) {
             originalRequest._retry = true;
             try {
                 const res = await api.post("/auth/refresh-token");
-                if (res.status === 200 && res.data?.token) {
-                    localStorage.setItem("token", res.data.token);
-                    api.defaults.headers.common.Authorization = `Bearer ${res.data.token}`;
-                    originalRequest.headers.Authorization = `Bearer ${res.data.token}`;
+                const newToken = res.data?.token;
+
+                if (res.status === 200 && newToken) {
+                    localStorage.setItem("token", newToken);
+                    originalRequest.headers = originalRequest.headers || {};
+                    originalRequest.headers.Authorization = `Bearer ${newToken}`;
                     return api(originalRequest);
                 }
             } catch (err) {
-                // 👇 DON'T hard redirect here; just reject
                 localStorage.removeItem("token");
                 localStorage.removeItem("user");
                 return Promise.reject(err);
