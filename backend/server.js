@@ -1,4 +1,4 @@
-require("dotenv").config({ path: __dirname + "/.env" });
+require("dotenv").config();
 
 const express = require("express");
 const path = require("path");
@@ -21,6 +21,7 @@ const PORT = process.env.PORT || 5000;
 const DEMO_ENABLED = process.env.ENABLE_DEMO_DB === "true";
 
 let initialized = false;
+let initializationPromise = null;
 
 const seedUser = async (Model, userData) => {
     let user = await Model.findOne({
@@ -29,20 +30,9 @@ const seedUser = async (Model, userData) => {
 
     if (!user) {
         user = await Model.create(userData);
-        console.log(`Created ${userData.email}`);
+        console.log(`Created demo user: ${userData.email}`);
     } else {
-        let updated = false;
-
-        if (!user.isDemo) {
-            user.isDemo = true;
-            updated = true;
-        }
-
-        if (updated) {
-            await user.save();
-        }
-
-        console.log(`Already exists: ${userData.email}`);
+        console.log(`Demo user already exists: ${userData.email}`);
     }
 
     return user;
@@ -61,72 +51,41 @@ const syncUserToDemo = async (DemoModel, prodUser) => {
         await DemoModel.create(clone);
 
         console.log(`Synced ${prodUser.email} to Demo DB`);
-    } else {
-        console.log(`Demo already has: ${prodUser.email}`);
     }
 };
 
 const seedDemoAccounts = async () => {
-    try {
-        const prodConn = getProdConnection();
+    const prodConn = getProdConnection();
+    const ProdModels = getModels(prodConn);
+    const ProdUser = ProdModels.User;
 
-        const ProdModels = getModels(prodConn);
+    const demoAdmin = await seedUser(ProdUser, {
+        email: "demo_admin@demo.com",
+        name: "Demo Admin",
+        password: "demo_password",
+        role: "admin",
+        isDemo: true,
+        designation: "System Administrator - Demo"
+    });
 
-        const {
-            User: ProdUser
-        } = ProdModels;
+    const demoSecurity = await seedUser(ProdUser, {
+        email: "demo_security@demo.com",
+        name: "Demo Security",
+        password: "demo_password",
+        role: "security",
+        isDemo: true,
+        designation: "Front Desk Security - Demo"
+    });
 
-        const demoAdmin = await seedUser(ProdUser, {
-            email: "demo_admin@demo.com",
-            name: "Demo Admin",
-            password: "demo_password",
-            role: "admin",
-            isDemo: true,
-            designation: "System Administrator - Demo"
-        });
+    if (DEMO_ENABLED) {
+        const demoConn = getDemoConnection();
+        const DemoModels = getModels(demoConn);
+        const DemoUser = DemoModels.User;
 
-        const demoSecurity = await seedUser(ProdUser, {
-            email: "demo_security@demo.com",
-            name: "Demo Security",
-            password: "demo_password",
-            role: "security",
-            isDemo: true,
-            designation: "Front Desk Security - Demo"
-        });
+        await syncUserToDemo(DemoUser, demoAdmin);
+        await syncUserToDemo(DemoUser, demoSecurity);
 
-        console.log("Prod DB: Demo accounts ensured.");
-
-        if (DEMO_ENABLED) {
-            const demoConn = getDemoConnection();
-
-            const DemoModels = getModels(demoConn);
-
-            const {
-                User: DemoUser
-            } = DemoModels;
-
-            if (demoAdmin) {
-                await syncUserToDemo(
-                    DemoUser,
-                    demoAdmin
-                );
-            }
-
-            if (demoSecurity) {
-                await syncUserToDemo(
-                    DemoUser,
-                    demoSecurity
-                );
-            }
-
-            console.log("Demo DB: Demo accounts synced.");
-        } else {
-            console.log(
-                "Demo DB sync skipped (ENABLE_DEMO_DB=false)."
-            );
-        }
-    } catch (error) {
-        console.error("Seeding Error:", error);
+        console.log("Demo DB accounts synced");
     }
 };
 
@@ -135,19 +94,23 @@ const initialize = async () => {
         return;
     }
 
-    await connectDB();
+    if (!initializationPromise) {
+        initializationPromise = (async () => {
+            await connectDB();
+            await seedDemoAccounts();
 
-    await seedDemoAccounts();
+            initialized = true;
 
-    initialized = true;
+            console.log("Backend initialized successfully");
+        })();
+    }
 
-    console.log("Backend initialized successfully.");
+    await initializationPromise;
 };
 
 const handler = async (req, res) => {
     try {
         await initialize();
-
         return app(req, res);
     } catch (error) {
         console.error("Server initialization error:", error);
@@ -165,17 +128,11 @@ if (require.main === module) {
     initialize()
         .then(() => {
             app.listen(PORT, () => {
-                console.log(
-                    `Server running on port ${PORT}`
-                );
+                console.log(`Server running on port ${PORT}`);
             });
         })
         .catch((error) => {
-            console.error(
-                "Failed to start server:",
-                error
-            );
-
+            console.error("Failed to start server:", error);
             process.exit(1);
         });
 }
