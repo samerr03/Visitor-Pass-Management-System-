@@ -32,25 +32,24 @@ const VisitorPass = ({ visitor, innerRef }) => {
     const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
 
     // Helper to process photo URL safely
-    const getPhotoUrl = (photoPath) => {
-        if (!photoPath) return null;
 
-        let filename = photoPath;
+const getPhotoUrl = (photoPath) => {
+    if (!photoPath) return null;
 
-        // Normalize slashes (Windows fix)
-        const normalized = photoPath.replace(/\\/g, "/");
+    // Cloudinary URL: use directly
+    if (/^https?:\/\//i.test(photoPath)) {
+        return photoPath;
+    }
 
-        // Extract filename after uploads/
-        if (normalized.includes("uploads/")) {
-            filename = normalized.split("uploads/").pop();
-        }
+    // Legacy local uploads: keep backward compatibility
+    const normalized = photoPath.replace(/\\/g, "/");
+    const filename = normalized.includes("uploads/")
+        ? normalized.split("uploads/").pop()
+        : normalized.replace(/^\/+/, "");
 
-        if (filename) {
-            return `${base}/uploads/${filename}`;
-        }
+    return filename ? `${base}/uploads/${filename}` : null;
+};
 
-        return null;
-    };
 
     const photoUrl = getPhotoUrl(visitor.photo);
 

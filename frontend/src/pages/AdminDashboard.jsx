@@ -170,13 +170,27 @@ const StaffManagement = ({ onUpdate, user }) => {
         }
     };
 
-    const getPhotoUrl = (photoPath) => {
-        if (!photoPath) return null;
-        if (photoPath.startsWith('http')) return photoPath;
-        const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
-        const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
-        return `${base}/${photoPath.replace(/\\/g, '/').replace(/^\//, '')}`;
-    };
+
+const getPhotoUrl = (photoPath) => {
+    if (!photoPath) return null;
+
+    if (/^https?:\/\//i.test(photoPath)) {
+        return photoPath;
+    }
+
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
+    const base = API_BASE.endsWith("/")
+        ? API_BASE.slice(0, -1)
+        : API_BASE;
+
+    const normalized = photoPath.replace(/\\/g, "/");
+    const filename = normalized.includes("uploads/")
+        ? normalized.split("uploads/").pop()
+        : normalized.replace(/^\/+/, "");
+
+    return filename ? `${base}/uploads/${filename}` : null;
+};
+
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">

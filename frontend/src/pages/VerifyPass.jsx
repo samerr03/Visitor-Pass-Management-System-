@@ -98,16 +98,29 @@ const VerifyPass = () => {
     };
 
     // Helper functions
-    const getPhotoUrl = (photoPath) => {
-        if (!photoPath) return null;
-        let filename = photoPath.replace(/\\/g, "/");
-        if (filename.includes("uploads/")) {
-            filename = filename.split("uploads/").pop();
-        }
+
+const getPhotoUrl = (photoPath) => {
+    if (!photoPath) return null;
+
+    // Cloudinary URL: use directly
+    if (/^https?:\/\//i.test(photoPath)) {
+        return photoPath;
+    }
+
+    // Legacy local uploads: preserve old photo support
+    const normalized = photoPath.replace(/\\/g, "/");
+        const filename = normalized.includes("uploads/")
+            ? normalized.split("uploads/").pop()
+            : normalized.replace(/^\/+/, "");
+
         const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
-        const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-        return `${base}/uploads/${filename}`;
+        const base = API_BASE_URL.endsWith("/")
+            ? API_BASE_URL.slice(0, -1)
+            : API_BASE_URL;
+
+        return filename ? `${base}/uploads/${filename}` : null;
     };
+
 
     const formatDate = (dateString) => {
         if (!dateString) return "N/A";

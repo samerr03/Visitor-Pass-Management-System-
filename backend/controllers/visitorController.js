@@ -59,13 +59,14 @@ const getVisitorByPassId = async (req, res, next) => {
 // @access  Private/Security/Admin
 const createVisitor = async (req, res, next) => {
     try {
-        console.log('[Create Visitor] Request Body:', req.body); // DEBUG
-        console.log('[Create Visitor] File:', req.file); // DEBUG
+        console.log('[Create Visitor] Request Body:', req.body);
+        console.log('[Create Visitor] File:', req.file);
+        console.log('[Create Visitor] Saved Photo Path:', photo);
 
         const { Visitor } = req.models;
         const { name, phone, purpose, idProofNumber, personToMeet } = req.body;
         // Fix: Store root-relative path '/uploads/filename.ext' to ensure it works on frontend
-        const photo = req.file ? `/uploads/${req.file.filename}` : null;
+        const photo = req.file ? req.file.path : null;
         console.log('[Create Visitor] Saved Photo Path:', photo); // DEBUG
 
         const passId = await generatePassId();

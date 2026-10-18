@@ -52,30 +52,29 @@ const VisitorPassPrintable = forwardRef(({ visitor }, ref) => {
         }
     };
 
-    // Helper to process photo URL
-    const getPhotoUrl = (photoPath) => {
-        if (!photoPath) return null;
 
-        try {
-            let filename = photoPath;
+const getPhotoUrl = (photoPath) => {
+    if (!photoPath) return null;
 
-            // Normalize slashes (Windows path fix)
-            const normalized = String(photoPath).replace(/\\/g, "/");
+    // Use Cloudinary URL directly
+    if (/^https?:\/\//i.test(photoPath)) {
+        return photoPath;
+    }
 
-            // Extract filename after uploads/
-            if (normalized.includes("uploads/")) {
-                filename = normalized.split("uploads/").pop();
-            }
+    try {
+        const normalized = String(photoPath).replace(/\\/g, "/");
+        const filename = normalized.includes("uploads/")
+            ? normalized.split("uploads/").pop()
+            : normalized.replace(/^\/+/, "");
 
-            if (filename) {
-                return `${base}/uploads/${filename}`;
-            }
-        } catch (e) {
-            console.error("Error processing photo URL", e);
-        }
-
+        return filename ? `${base}/uploads/${filename}` : null;
+    } catch (e) {
+        console.error("Error processing photo URL", e);
         return null;
-    };
+    }
+};
+
+
 
     // Keep ref attached to avoid react-to-print crash
     if (!visitor) {
