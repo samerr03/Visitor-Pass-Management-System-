@@ -10,7 +10,6 @@
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "buildCommand": "cd frontend && npm run build",
         "distDir": "dist"
       }
     }
@@ -21,11 +20,16 @@
       "dest": "/backend/server.js"
     },
     {
-      "handle": "filesystem"
+      "src": "/assets/(.*)",
+      "dest": "/frontend/assets/$1"
     },
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+      "src": "/favicon.svg",
+      "dest": "/frontend/favicon.svg"
+    },
+    {
+  "src": "/(.*)",
+  "dest": "/frontend/index.html"
+}
   ]
 }

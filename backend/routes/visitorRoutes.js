@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const sendVisitorPassEmail =
+    require('../controllers/sendVisitorPassEmail');
 
 const {
     getAllVisitors,
@@ -23,7 +25,13 @@ router.route('/')
     .get(protect, modelContext, authorize('admin', 'security'), getAllVisitors)
     .post(protect, modelContext, authorize('security'), demoLimit, upload.single('photo'), createVisitorValidation, validate, createVisitor);
 // Note: createVisitor IS allowed for demo users (in demo DB) as per requirements.
-
+router.post(
+    '/:id/email-pass',
+    protect,
+    modelContext,
+    authorize('admin', 'security'),
+    sendVisitorPassEmail
+);
 router.route('/today')
     .get(protect, modelContext, authorize('admin', 'security'), getTodaysVisitors);
 

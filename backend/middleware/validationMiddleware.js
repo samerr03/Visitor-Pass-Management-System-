@@ -1,3 +1,4 @@
+
 const { body, validationResult } = require('express-validator');
 
 const loginValidation = [
@@ -8,6 +9,11 @@ const loginValidation = [
 const createVisitorValidation = [
     body('name').notEmpty().withMessage('Name is required'),
     body('phone').notEmpty().withMessage('Phone is required'),
+    body('email')
+        .trim()
+        .isEmail()
+        .withMessage('Valid visitor email is required')
+        .normalizeEmail(),
     body('purpose').notEmpty().withMessage('Purpose is required'),
     body('idProofNumber').notEmpty().withMessage('ID proof number is required'),
     body('personToMeet').notEmpty().withMessage('Person to meet is required'),

@@ -58,13 +58,15 @@ const getVisitorByPassId = async (req, res, next) => {
 
 // @desc    Create a new visitor pass
 // @route   POST /api/visitors
-// @access  Private/Security/Admin
+// @access  Private/Security
 const createVisitor = async (req, res, next) => {
     try {
         const { Visitor } = req.models;
+
         const {
             name,
             phone,
+            email,
             purpose,
             idProofNumber,
             personToMeet
@@ -85,6 +87,7 @@ const createVisitor = async (req, res, next) => {
         const visitor = await Visitor.create({
             name,
             phone,
+            email,
             purpose,
             idProofNumber,
             personToMeet,

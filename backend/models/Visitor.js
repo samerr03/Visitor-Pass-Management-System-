@@ -1,3 +1,4 @@
+
 const mongoose = require('mongoose');
 
 const visitorSchema = new mongoose.Schema({
@@ -10,6 +11,13 @@ const visitorSchema = new mongoose.Schema({
         type: String,
         required: true,
         index: true,
+    },
+    email: {
+        type: String,
+        required: true,
+        lowercase: true,
+        trim: true,
+        match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please enter a valid email address'],
     },
     purpose: {
         type: String,
@@ -24,10 +32,10 @@ const visitorSchema = new mongoose.Schema({
         required: true,
     },
     photo: {
-        type: String, // Path to uploaded image
+        type: String,
     },
     qrCode: {
-        type: String, // Optional: store base64 or URL if needed
+        type: String,
     },
     passId: {
         type: String,
@@ -54,7 +62,6 @@ const visitorSchema = new mongoose.Schema({
     },
     expiryTime: {
         type: Date,
-        // Default expiry is 24 hours from creation
         default: () => new Date(Date.now() + 24 * 60 * 60 * 1000)
     },
     createdBy: {
@@ -63,7 +70,7 @@ const visitorSchema = new mongoose.Schema({
         required: true,
     },
     demoSessionId: {
-        type: String, // Links visitor to the specific demo session
+        type: String,
         index: true,
     },
 }, { timestamps: true });

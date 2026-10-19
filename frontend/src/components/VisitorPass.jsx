@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import QRCodeLib from "qrcode";
 import logo from "../assets/shield-logo.png";
@@ -5,194 +6,410 @@ import logo from "../assets/shield-logo.png";
 const VisitorPass = ({ visitor, innerRef }) => {
     const [qrCodeUrl, setQrCodeUrl] = useState("");
 
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+    const base = API_BASE_URL.replace(/\/+$/, "");
+
     useEffect(() => {
-        if (visitor) {
-            const generateQR = async () => {
-                try {
-                    // Update QR code value to point to the verification page
-                    const frontendUrl = window.location.origin;
-                    const qrData = `${frontendUrl}/verify/${visitor.passId}`;
-                    const url = await QRCodeLib.toDataURL(qrData, { width: 200, margin: 1 });
-                    setQrCodeUrl(url);
-                } catch (err) {
-                    console.error("QR Generation Error:", err);
-                }
-            };
-            generateQR();
-        }
-    }, [visitor]);
+        let cancelled = false;
+
+        const generateQR = async () => {
+            if (!visitor?.passId) {
+                setQrCodeUrl("");
+                return;
+            }
+
+            try {
+                const qrData = `${window.location.origin}/verify/${encodeURIComponent(
+                    visitor.passId
+                )}`;
+
+                const url = await QRCodeLib.toDataURL(qrData, {
+                    width: 320,
+                    margin: 2,
+                    errorCorrectionLevel: "M",
+                });
+
+                if (!cancelled) setQrCodeUrl(url);
+            } catch (error) {
+                console.error("QR generation error:", error);
+                if (!cancelled) setQrCodeUrl("");
+            }
+        };
+
+        generateQR();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [visitor?.passId]);
 
     if (!visitor) return null;
 
-    // 🔥 Safe API base (no crash if env missing)
-    const API_BASE_URL =
-        import.meta.env.VITE_API_BASE_URL || "/api";
+    const getPhotoUrl = (photoPath) => {
+        if (!photoPath) return "";
 
-    // Keep base intact to route through CloudFront API behavior
-    const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+        if (/^https?:\/\//i.test(photoPath)) {
+            return photoPath;
+        }
 
-    // Helper to process photo URL safely
+        const normalized = String(photoPath)
+            .replace(/\\/g, "/")
+            .replace(/^\/+/, "");
 
-const getPhotoUrl = (photoPath) => {
-    if (!photoPath) return null;
+        const filename = normalized.includes("uploads/")
+            ? normalized.split("uploads/").pop()
+            : normalized;
 
-    // Cloudinary URL: use directly
-    if (/^https?:\/\//i.test(photoPath)) {
-        return photoPath;
-    }
-
-    // Legacy local uploads: keep backward compatibility
-    const normalized = photoPath.replace(/\\/g, "/");
-    const filename = normalized.includes("uploads/")
-        ? normalized.split("uploads/").pop()
-        : normalized.replace(/^\/+/, "");
-
-    return filename ? `${base}/uploads/${filename}` : null;
-};
-
+        return filename
+            ? `${base}/uploads/${filename
+                  .split("/")
+                  .map(encodeURIComponent)
+                  .join("/")}`
+            : "";
+    };
 
     const photoUrl = getPhotoUrl(visitor.photo);
+    const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+        visitor.name || "Visitor"
+    )}&background=E2E8F0&color=172554&size=256`;
 
-    // Safe date formatting
-    const formatDate = (dateString) => {
-        if (!dateString) return "N/A";
-        const date = new Date(dateString);
-        return isNaN(date.getTime())
-            ? "Invalid Date"
+    const formatDate = (value) => {
+        if (!value) return "N/A";
+        const date = new Date(value);
+        return Number.isNaN(date.getTime())
+            ? "N/A"
             : date.toLocaleDateString();
     };
 
-    const formatTime = (dateString) => {
-        if (!dateString) return "N/A";
-        const date = new Date(dateString);
-        return isNaN(date.getTime())
-            ? "Invalid Time"
+    const formatTime = (value) => {
+        if (!value) return "N/A";
+        const date = new Date(value);
+        return Number.isNaN(date.getTime())
+            ? "N/A"
             : date.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-            });
+                  hour: "2-digit",
+                  minute: "2-digit",
+              });
     };
 
-    // Determine Status Badge Color
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'USED': return 'bg-slate-500';
-            case 'EXPIRED': return 'bg-red-500';
-            case 'ACTIVE':
-            default: return 'bg-emerald-500';
-        }
+    const status = visitor.status || "ACTIVE";
+
+    const statusStyles = {
+        ACTIVE: "bg-emerald-100 text-emerald-800",
+        USED: "bg-slate-200 text-slate-700",
+        EXPIRED: "bg-red-100 text-red-800",
     };
 
-    const currentStatus = visitor.status || 'ACTIVE';
+    const fields = [
+        ["Purpose", visitor.purpose],
+        ["Phone", visitor.phone],
+        ["Meeting With", visitor.personToMeet],
+        ["Entry Time", formatTime(visitor.entryTime)],
+        ["Date", formatDate(visitor.entryTime)],
+        ["Email", visitor.email],
+    ];
 
     return (
-        <div className="w-full h-full flex justify-center items-center py-4 print:p-0 print:block print:w-auto print:h-auto">
-            <div
-                ref={innerRef}
-                className="w-[320px] min-h-[500px] bg-white border-2 border-slate-900 rounded-xl overflow-hidden shadow-2xl text-sm mx-auto print:w-[320px] print:shadow-none"
-            >
-                {/* Header */}
-                <div className="bg-slate-900 text-white p-5 text-center relative">
-                    {/* Logo */}
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-20 h-20 flex items-center justify-center">
-                        <img src={logo} alt="Logo" className="w-full h-full object-contain" />
-                    </div>
-                    <h1 className="text-xl font-bold uppercase pl-32">Visitor Pass</h1>
-                    <p className="text-slate-400 text-[10px] uppercase pl-32">
-                        Visitor Management System
-                    </p>
-                </div>
+        <div className="w-full flex justify-center py-3 print:p-0 print:block">
+            <style>{`
+                .visitor-card {
+                    width: 100%;
+                    max-width: 360px;
+                    box-sizing: border-box;
+                    overflow: hidden;
+                    border: 1px solid #dbe3ef;
+                    border-radius: 16px;
+                    background: #fff;
+                    color: #172033;
+                    font-family: Arial, Helvetica, sans-serif;
+                    box-shadow: 0 10px 30px rgba(15,23,42,.12);
+                }
 
-                {/* Content */}
-                <div className="p-5 flex flex-col items-center gap-4">
-                    {/* Photo */}
-                    <div className="relative">
-                        <div className="w-32 h-32 rounded-full border-4 border-slate-100 shadow-xl overflow-hidden bg-slate-100">
-                            {photoUrl ? (
+                .visitor-card *,
+                .visitor-card *::before,
+                .visitor-card *::after {
+                    box-sizing: border-box;
+                }
+
+                .visitor-card .vc-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 17px 16px;
+                    background: #172554;
+                    color: white;
+                }
+
+                .visitor-card .vc-logo {
+                    width: 48px;
+                    height: 48px;
+                    flex-shrink: 0;
+                    padding: 3px;
+                    border-radius: 9px;
+                    background: white;
+                    object-fit: contain;
+                }
+
+                .visitor-card .vc-title {
+                    min-width: 0;
+                }
+
+                .visitor-card .vc-title h2 {
+                    margin: 0;
+                    font-size: 19px;
+                    font-weight: 800;
+                    letter-spacing: .8px;
+                    line-height: 1.3;
+                }
+
+                .visitor-card .vc-title p {
+                    margin: 4px 0 0;
+                    color: #cbd5e1;
+                    font-size: 9px;
+                    line-height: 1.4;
+                    letter-spacing: .7px;
+                    text-transform: uppercase;
+                }
+
+                .visitor-card .vc-body {
+                    padding: 17px;
+                }
+
+                .visitor-card .vc-profile {
+                    display: flex;
+                    align-items: center;
+                    gap: 14px;
+                    padding-bottom: 16px;
+                    border-bottom: 1px solid #e2e8f0;
+                }
+
+                .visitor-card .vc-photo {
+                    width: 94px;
+                    height: 108px;
+                    flex-shrink: 0;
+                    border: 2px solid #e2e8f0;
+                    border-radius: 10px;
+                    object-fit: cover;
+                    background: #f1f5f9;
+                }
+
+                .visitor-card .vc-profile-info {
+                    min-width: 0;
+                    flex: 1;
+                }
+
+                .visitor-card .vc-label {
+                    color: #64748b;
+                    font-size: 9px;
+                    font-weight: 700;
+                    letter-spacing: .7px;
+                    text-transform: uppercase;
+                }
+
+                .visitor-card .vc-name {
+                    margin: 5px 0 11px;
+                    color: #172554;
+                    font-size: 17px;
+                    font-weight: 800;
+                    line-height: 1.3;
+                    overflow-wrap: anywhere;
+                }
+
+                .visitor-card .vc-passid {
+                    margin-top: 5px;
+                    color: #1d4ed8;
+                    font-family: monospace;
+                    font-size: 12px;
+                    font-weight: 800;
+                    overflow-wrap: anywhere;
+                }
+
+                .visitor-card .vc-fields {
+                    display: grid;
+                    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+                    gap: 13px 10px;
+                    margin-top: 16px;
+                    padding: 13px;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 11px;
+                    background: #f8fafc;
+                }
+
+                .visitor-card .vc-field {
+                    min-width: 0;
+                }
+
+                .visitor-card .vc-value {
+                    margin-top: 4px;
+                    color: #1e293b;
+                    font-size: 11px;
+                    font-weight: 700;
+                    line-height: 1.45;
+                    overflow-wrap: anywhere;
+                    word-break: break-word;
+                }
+
+                .visitor-card .vc-qr-section {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 13px;
+                    margin-top: 17px;
+                    padding-top: 15px;
+                    border-top: 1px dashed #cbd5e1;
+                }
+
+                .visitor-card .vc-qr-box {
+                    width: 116px;
+                    height: 116px;
+                    flex-shrink: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 6px;
+                    border: 1px solid #dbe3ef;
+                    border-radius: 10px;
+                    background: white;
+                }
+
+                .visitor-card .vc-qr-box img {
+                    display: block;
+                    width: 102px;
+                    height: 102px;
+                    object-fit: contain;
+                }
+
+                .visitor-card .vc-qr-info {
+                    min-width: 0;
+                }
+
+                .visitor-card .vc-qr-info strong {
+                    display: block;
+                    color: #172554;
+                    font-size: 12px;
+                    line-height: 1.4;
+                }
+
+                .visitor-card .vc-qr-info p {
+                    margin: 5px 0 0;
+                    color: #64748b;
+                    font-size: 10px;
+                    line-height: 1.5;
+                }
+
+                .visitor-card .vc-footer {
+                    padding: 11px;
+                    border-top: 1px solid #e2e8f0;
+                    background: #f8fafc;
+                    color: #64748b;
+                    text-align: center;
+                    font-size: 9px;
+                    font-weight: 700;
+                    letter-spacing: .8px;
+                    text-transform: uppercase;
+                }
+
+                @media print {
+                    .visitor-card {
+                        max-width: 360px !important;
+                        margin: 0 auto !important;
+                        box-shadow: none !important;
+                        break-inside: avoid !important;
+                        page-break-inside: avoid !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+
+                    .visitor-card .vc-header,
+                    .visitor-card .vc-fields,
+                    .visitor-card .vc-footer {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                }
+            `}</style>
+
+            <div ref={innerRef} className="visitor-card">
+                <header className="vc-header">
+                    <img src={logo} alt="System logo" className="vc-logo" />
+
+                    <div className="vc-title">
+                        <h2>VISITOR PASS</h2>
+                        <p>Visitor Management System</p>
+                        <span
+                            className={`inline-block mt-2 rounded-full px-3 py-1 text-[10px] font-extrabold ${
+                                statusStyles[status] ||
+                                statusStyles.ACTIVE
+                            }`}
+                        >
+                            {status}
+                        </span>
+                    </div>
+                </header>
+
+                <main className="vc-body">
+                    <section className="vc-profile">
+                        <img
+                            src={photoUrl || fallbackAvatar}
+                            alt={`${visitor.name || "Visitor"} photo`}
+                            className="vc-photo"
+                            onError={(event) => {
+                                if (!event.currentTarget.dataset.fallback) {
+                                    event.currentTarget.dataset.fallback = "true";
+                                    event.currentTarget.src = fallbackAvatar;
+                                }
+                            }}
+                        />
+
+                        <div className="vc-profile-info">
+                            <div className="vc-label">Visitor Name</div>
+                            <div className="vc-name">
+                                {visitor.name || "Unknown Visitor"}
+                            </div>
+
+                            <div className="vc-label">Pass ID</div>
+                            <div className="vc-passid">
+                                {visitor.passId || "N/A"}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="vc-fields">
+                        {fields.map(([label, value]) => (
+                            <div className="vc-field" key={label}>
+                                <div className="vc-label">{label}</div>
+                                <div className="vc-value">
+                                    {value || "N/A"}
+                                </div>
+                            </div>
+                        ))}
+                    </section>
+
+                    <section className="vc-qr-section">
+                        <div className="vc-qr-box">
+                            {qrCodeUrl ? (
                                 <img
-                                    src={photoUrl}
-                                    alt="Visitor"
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                        e.target.src = `https://ui-avatars.com/api/?name=${visitor.name}&background=0D8ABC&color=fff`;
-                                    }}
+                                    src={qrCodeUrl}
+                                    alt="Visitor verification QR"
                                 />
                             ) : (
-                                <img
-                                    src={`https://ui-avatars.com/api/?name=${visitor.name}&background=0D8ABC&color=fff&size=200`}
-                                    alt="Visitor"
-                                    className="w-full h-full object-cover"
-                                />
+                                <span className="vc-label">Loading QR...</span>
                             )}
                         </div>
 
-                        <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-0.5 ${getStatusColor(currentStatus)} text-white text-[10px] font-bold rounded-full uppercase shadow-md whitespace-nowrap`}>
-                            {currentStatus}
-                        </div>
-                    </div>
-
-                    {/* Name */}
-                    <div className="text-center w-full mt-1">
-                        <h2 className="text-xl font-bold text-slate-800 uppercase">
-                            {visitor.name}
-                        </h2>
-                        <p className="text-slate-500 text-xs mt-0.5">
-                            {visitor.purpose} • {visitor.phone}
-                        </p>
-                    </div>
-
-                    {/* Info Grid */}
-                    <div className="grid grid-cols-2 gap-3 w-full bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <div>
-                            <p className="text-[10px] text-slate-400 uppercase">
-                                Meeting With
-                            </p>
-                            <p className="font-bold text-slate-700 text-sm truncate">
-                                {visitor.personToMeet}
+                        <div className="vc-qr-info">
+                            <strong>Scan to Verify</strong>
+                            <p>
+                                Scan at the entry or exit gate to verify
+                                this visitor pass.
                             </p>
                         </div>
-                        <div>
-                            <p className="text-[10px] text-slate-400 uppercase">Pass ID</p>
-                            <p className="font-mono font-bold text-blue-600 text-sm truncate">
-                                {visitor.passId}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-[10px] text-slate-400 uppercase">
-                                Entry Time
-                            </p>
-                            <p className="font-bold text-slate-700 text-xs">
-                                {formatTime(visitor.entryTime)}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-[10px] text-slate-400 uppercase">Date</p>
-                            <p className="font-bold text-slate-700 text-xs">
-                                {formatDate(visitor.entryTime)}
-                            </p>
-                        </div>
-                    </div>
+                    </section>
+                </main>
 
-                    {/* QR */}
-                    <div className="mt-2 bg-white p-2 rounded-lg border-2 border-slate-200 flex justify-center">
-                        {qrCodeUrl ? (
-                            <img src={qrCodeUrl} alt="QR Code" className="w-[140px] h-[140px]" />
-                        ) : (
-                            <div className="w-[140px] h-[140px] bg-slate-100 flex items-center justify-center text-xs text-slate-400">Loading QR...</div>
-                        )}
-                    </div>
-
-                    <p className="text-[8px] text-slate-400 text-center">
-                        Scan at exit gate
-                    </p>
-                </div>
-
-                {/* Footer */}
-                <div className="bg-slate-50 border-t border-slate-100 p-2 text-center">
-                    <p className="text-[8px] text-slate-400 uppercase">
-                        Authorized Visitor Pass
-                    </p>
-                </div>
+                <footer className="vc-footer">
+                    Authorized Visitor Pass
+                </footer>
             </div>
         </div>
     );
