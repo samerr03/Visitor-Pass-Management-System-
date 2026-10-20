@@ -39,7 +39,9 @@ const getPhotoBuffer = (url) =>
             return resolve(null);
         }
 
-        const client = parsedUrl.protocol === 'https:' ? https : http;
+        const client =
+            parsedUrl.protocol === 'https:' ? https : http;
+
         let settled = false;
 
         const finish = (value) => {
@@ -61,10 +63,16 @@ const getPhotoBuffer = (url) =>
                     return finish(null);
                 }
 
-                const redirect = new URL(
-                    response.headers.location,
-                    parsedUrl
-                );
+                let redirect;
+
+                try {
+                    redirect = new URL(
+                        response.headers.location,
+                        parsedUrl
+                    );
+                } catch {
+                    return finish(null);
+                }
 
                 if (redirect.protocol !== 'https:') {
                     return finish(null);
@@ -80,7 +88,8 @@ const getPhotoBuffer = (url) =>
                 return finish(null);
             }
 
-            const contentType = response.headers['content-type'] || '';
+            const contentType =
+                response.headers['content-type'] || '';
 
             if (!contentType.startsWith('image/')) {
                 response.resume();
@@ -125,7 +134,9 @@ const formatDate = (value) => {
 
     const date = new Date(value);
 
-    if (Number.isNaN(date.getTime())) return 'N/A';
+    if (Number.isNaN(date.getTime())) {
+        return 'N/A';
+    }
 
     return date.toLocaleString('en-IN', {
         day: '2-digit',
@@ -137,14 +148,25 @@ const formatDate = (value) => {
 };
 
 const safeText = (value) => {
-    if (value === null || value === undefined || value === '') {
+    if (
+        value === null ||
+        value === undefined ||
+        value === ''
+    ) {
         return 'N/A';
     }
 
     return String(value);
 };
 
-const drawLabelValue = (doc, label, value, x, y, width) => {
+const drawLabelValue = (
+    doc,
+    label,
+    value,
+    x,
+    y,
+    width
+) => {
     doc.font('Helvetica-Bold')
         .fontSize(8)
         .fillColor(COLORS.muted)
@@ -207,42 +229,81 @@ const sendVisitorPassEmail = async (req, res, next) => {
             FRONTEND_URL,
         } = process.env;
 
-        if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
+        const missingVariables = [];
+
+        if (!SMTP_HOST?.trim()) {
+            missingVariables.push('SMTP_HOST');
+        }
+
+        if (!SMTP_USER?.trim()) {
+            missingVariables.push('SMTP_USER');
+        }
+
+        if (!SMTP_PASS?.trim()) {
+            missingVariables.push('SMTP_PASS');
+        }
+
+        console.log('SMTP configuration check:', {
+            hostPresent: Boolean(SMTP_HOST?.trim()),
+            portPresent: Boolean(SMTP_PORT?.trim()),
+            securePresent: Boolean(SMTP_SECURE?.trim()),
+            userPresent: Boolean(SMTP_USER?.trim()),
+            passPresent: Boolean(SMTP_PASS?.trim()),
+            missingVariables,
+        });
+
+        if (missingVariables.length > 0) {
             return res.status(500).json({
                 message: 'Email service is not configured.',
+                missingVariables,
             });
         }
 
         const port = Number(SMTP_PORT || 465);
 
+        if (!Number.isInteger(port) || port < 1 || port > 65535) {
+            return res.status(500).json({
+                message: 'SMTP_PORT must be a valid port number.',
+            });
+        }
+
+        const secure =
+            SMTP_SECURE !== undefined &&
+            SMTP_SECURE.trim() !== ''
+                ? SMTP_SECURE.trim().toLowerCase() === 'true'
+                : port === 465;
+
         const transporter = nodemailer.createTransport({
-            host: SMTP_HOST,
+            host: SMTP_HOST.trim(),
             port,
-            secure:
-                SMTP_SECURE !== undefined
-                    ? SMTP_SECURE === 'true'
-                    : port === 465,
+            secure,
             auth: {
-                user: SMTP_USER,
+                user: SMTP_USER.trim(),
                 pass: SMTP_PASS,
             },
+            connectionTimeout: 10000,
+            greetingTimeout: 10000,
+            socketTimeout: 20000,
         });
 
         const frontendUrl = (
-            FRONTEND_URL || 'http://localhost:5173'
+            FRONTEND_URL ||
+            'http://localhost:5173'
         ).replace(/\/+$/, '');
 
         const verificationUrl =
             `${frontendUrl}/verify/${encodeURIComponent(visitor.passId)}`;
 
-        const qrBuffer = await QRCode.toBuffer(verificationUrl, {
-            type: 'png',
-            width: 320,
-            margin: 2,
-            errorCorrectionLevel: 'H',
-        });
+        const qrBuffer = await QRCode.toBuffer(
+            verificationUrl,
+            {
+                type: 'png',
+                width: 320,
+                margin: 2,
+                errorCorrectionLevel: 'H',
+            }
+        );
 
-        // Use a public photo URL if your Visitor model stores one.
         const photoUrl =
             visitor.photoUrl ||
             visitor.photo ||
@@ -274,7 +335,6 @@ const sendVisitorPassEmail = async (req, res, next) => {
         });
 
         const pageWidth = doc.page.width;
-        const pageHeight = doc.page.height;
         const margin = 36;
         const cardX = margin;
         const cardY = 60;
@@ -284,43 +344,65 @@ const sendVisitorPassEmail = async (req, res, next) => {
         const innerRight = cardX + cardWidth - 25;
         const innerWidth = innerRight - innerX;
 
-        const status = safeText(visitor.status || 'ACTIVE').toUpperCase();
+        const status = safeText(
+            visitor.status || 'ACTIVE'
+        ).toUpperCase();
+
         const isActive = status === 'ACTIVE';
 
-        // Background
-        doc.rect(0, 0, pageWidth, pageHeight)
+        doc.rect(0, 0, pageWidth, doc.page.height)
             .fill(COLORS.background);
 
-        // Main card
-        doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 18)
-            .fill(COLORS.white);
+        doc.roundedRect(
+            cardX,
+            cardY,
+            cardWidth,
+            cardHeight,
+            18
+        ).fill(COLORS.white);
 
-        doc.roundedRect(cardX, cardY, cardWidth, 112, 18)
-            .fill(COLORS.navy);
+        doc.roundedRect(
+            cardX,
+            cardY,
+            cardWidth,
+            112,
+            18
+        ).fill(COLORS.navy);
 
-        // Square the lower header corners.
-        doc.rect(cardX, cardY + 85, cardWidth, 27)
-            .fill(COLORS.navy);
+        doc.rect(
+            cardX,
+            cardY + 85,
+            cardWidth,
+            27
+        ).fill(COLORS.navy);
 
-        // Header
         doc.fillColor(COLORS.white)
             .font('Helvetica-Bold')
             .fontSize(24)
-            .text('VISITOR PASS', cardX + 20, cardY + 24, {
-                width: cardWidth - 40,
-                align: 'center',
-            });
+            .text(
+                'VISITOR PASS',
+                cardX + 20,
+                cardY + 24,
+                {
+                    width: cardWidth - 40,
+                    align: 'center',
+                }
+            );
 
         doc.fillColor('#DCE7FF')
             .font('Helvetica')
             .fontSize(9)
-            .text('VISITOR PASS MANAGEMENT SYSTEM', cardX + 20, cardY + 62, {
-                width: cardWidth - 40,
-                align: 'center',
-                characterSpacing: 1,
-            });
+            .text(
+                'VISITOR PASS MANAGEMENT SYSTEM',
+                cardX + 20,
+                cardY + 62,
+                {
+                    width: cardWidth - 40,
+                    align: 'center',
+                    characterSpacing: 1,
+                }
+            );
 
-        // Pass ID and status
         doc.fillColor(COLORS.muted)
             .font('Helvetica-Bold')
             .fontSize(8)
@@ -329,10 +411,15 @@ const sendVisitorPassEmail = async (req, res, next) => {
         doc.fillColor(COLORS.blue)
             .font('Helvetica-Bold')
             .fontSize(16)
-            .text(safeText(visitor.passId), innerX, 207, {
-                width: innerWidth - 125,
-                ellipsis: true,
-            });
+            .text(
+                safeText(visitor.passId),
+                innerX,
+                207,
+                {
+                    width: innerWidth - 125,
+                    ellipsis: true,
+                }
+            );
 
         const badgeWidth = 105;
         const badgeX = innerRight - badgeWidth;
@@ -344,9 +431,15 @@ const sendVisitorPassEmail = async (req, res, next) => {
             badgeWidth,
             28,
             8
-        ).fill(isActive ? COLORS.lightGreen : COLORS.lightAmber);
+        ).fill(
+            isActive
+                ? COLORS.lightGreen
+                : COLORS.lightAmber
+        );
 
-        doc.fillColor(isActive ? COLORS.green : COLORS.amber)
+        doc.fillColor(
+            isActive ? COLORS.green : COLORS.amber
+        )
             .font('Helvetica-Bold')
             .fontSize(9)
             .text(status, badgeX, badgeY + 9, {
@@ -361,17 +454,22 @@ const sendVisitorPassEmail = async (req, res, next) => {
             .strokeColor(COLORS.border)
             .stroke();
 
-        // Photo panel
         const photoX = innerX;
         const photoY = 269;
         const photoSize = 112;
 
-        doc.roundedRect(photoX, photoY, photoSize, photoSize, 12)
-            .fill(COLORS.lightBlue);
+        doc.roundedRect(
+            photoX,
+            photoY,
+            photoSize,
+            photoSize,
+            12
+        ).fill(COLORS.lightBlue);
 
         if (photoBuffer) {
             try {
                 doc.save();
+
                 doc.roundedRect(
                     photoX + 4,
                     photoY + 4,
@@ -380,23 +478,37 @@ const sendVisitorPassEmail = async (req, res, next) => {
                     8
                 ).clip();
 
-                doc.image(photoBuffer, photoX + 4, photoY + 4, {
-                    fit: [photoSize - 8, photoSize - 8],
-                    align: 'center',
-                    valign: 'center',
-                });
+                doc.image(
+                    photoBuffer,
+                    photoX + 4,
+                    photoY + 4,
+                    {
+                        fit: [
+                            photoSize - 8,
+                            photoSize - 8,
+                        ],
+                        align: 'center',
+                        valign: 'center',
+                    }
+                );
 
                 doc.restore();
             } catch (error) {
                 doc.restore();
+
                 doc.fillColor(COLORS.blue)
                     .font('Helvetica-Bold')
                     .fontSize(30)
                     .text(
-                        safeText(visitor.name).charAt(0).toUpperCase(),
+                        safeText(visitor.name)
+                            .charAt(0)
+                            .toUpperCase(),
                         photoX,
                         photoY + 39,
-                        { width: photoSize, align: 'center' }
+                        {
+                            width: photoSize,
+                            align: 'center',
+                        }
                     );
             }
         } else {
@@ -404,14 +516,18 @@ const sendVisitorPassEmail = async (req, res, next) => {
                 .font('Helvetica-Bold')
                 .fontSize(30)
                 .text(
-                    safeText(visitor.name).charAt(0).toUpperCase(),
+                    safeText(visitor.name)
+                        .charAt(0)
+                        .toUpperCase(),
                     photoX,
                     photoY + 39,
-                    { width: photoSize, align: 'center' }
+                    {
+                        width: photoSize,
+                        align: 'center',
+                    }
                 );
         }
 
-        // Visitor identity
         const identityX = photoX + photoSize + 22;
         const identityWidth = innerRight - identityX;
 
@@ -423,29 +539,47 @@ const sendVisitorPassEmail = async (req, res, next) => {
         doc.fillColor(COLORS.text)
             .font('Helvetica-Bold')
             .fontSize(17)
-            .text(safeText(visitor.name), identityX, photoY + 20, {
-                width: identityWidth,
-                height: 40,
-                ellipsis: true,
-            });
+            .text(
+                safeText(visitor.name),
+                identityX,
+                photoY + 20,
+                {
+                    width: identityWidth,
+                    height: 40,
+                    ellipsis: true,
+                }
+            );
 
         doc.fillColor(COLORS.muted)
             .font('Helvetica-Bold')
             .fontSize(8)
-            .text('PURPOSE OF VISIT', identityX, photoY + 65);
+            .text(
+                'PURPOSE OF VISIT',
+                identityX,
+                photoY + 65
+            );
 
         doc.fillColor(COLORS.text)
             .font('Helvetica')
             .fontSize(11)
-            .text(safeText(visitor.purpose), identityX, photoY + 80, {
-                width: identityWidth,
-                height: 26,
-                ellipsis: true,
-            });
+            .text(
+                safeText(visitor.purpose),
+                identityX,
+                photoY + 80,
+                {
+                    width: identityWidth,
+                    height: 26,
+                    ellipsis: true,
+                }
+            );
 
-        // Details section
-        doc.roundedRect(innerX, 406, innerWidth, 142, 12)
-            .fill('#F8FAFE');
+        doc.roundedRect(
+            innerX,
+            406,
+            innerWidth,
+            142,
+            12
+        ).fill('#F8FAFE');
 
         const gap = 20;
         const columnWidth = (innerWidth - gap) / 2;
@@ -487,12 +621,16 @@ const sendVisitorPassEmail = async (req, res, next) => {
             columnWidth - 14
         );
 
-        // QR verification panel
         const qrPanelY = 565;
         const qrPanelHeight = 105;
 
-        doc.roundedRect(innerX, qrPanelY, innerWidth, qrPanelHeight, 12)
-            .fill(COLORS.lightBlue);
+        doc.roundedRect(
+            innerX,
+            qrPanelY,
+            innerWidth,
+            qrPanelHeight,
+            12
+        ).fill(COLORS.lightBlue);
 
         doc.roundedRect(
             innerX + 13,
@@ -502,9 +640,14 @@ const sendVisitorPassEmail = async (req, res, next) => {
             8
         ).fill(COLORS.white);
 
-        doc.image(qrBuffer, innerX + 19, qrPanelY + 18, {
-            fit: [69, 69],
-        });
+        doc.image(
+            qrBuffer,
+            innerX + 19,
+            qrPanelY + 18,
+            {
+                fit: [69, 69],
+            }
+        );
 
         const qrTextX = innerX + 112;
         const qrTextWidth = innerRight - qrTextX;
@@ -512,9 +655,14 @@ const sendVisitorPassEmail = async (req, res, next) => {
         doc.fillColor(COLORS.navy)
             .font('Helvetica-Bold')
             .fontSize(12)
-            .text('SCAN TO VERIFY', qrTextX, qrPanelY + 27, {
-                width: qrTextWidth,
-            });
+            .text(
+                'SCAN TO VERIFY',
+                qrTextX,
+                qrPanelY + 27,
+                {
+                    width: qrTextWidth,
+                }
+            );
 
         doc.fillColor(COLORS.muted)
             .font('Helvetica')
@@ -529,7 +677,6 @@ const sendVisitorPassEmail = async (req, res, next) => {
                 }
             );
 
-        // Footer
         doc.fillColor(COLORS.muted)
             .font('Helvetica')
             .fontSize(8)
@@ -546,18 +693,23 @@ const sendVisitorPassEmail = async (req, res, next) => {
         doc.fillColor(COLORS.blue)
             .font('Helvetica-Bold')
             .fontSize(8)
-            .text('AUTHORIZED VISITOR PASS', cardX + 20, 708, {
-                width: cardWidth - 40,
-                align: 'center',
-                characterSpacing: 1,
-            });
+            .text(
+                'AUTHORIZED VISITOR PASS',
+                cardX + 20,
+                708,
+                {
+                    width: cardWidth - 40,
+                    align: 'center',
+                    characterSpacing: 1,
+                }
+            );
 
         doc.end();
 
         const pdfBuffer = await pdfBufferPromise;
 
-        await transporter.sendMail({
-            from: `"Visitor Pass System" <${SMTP_USER}>`,
+        const mailResult = await transporter.sendMail({
+            from: `"Visitor Pass System" <${SMTP_USER.trim()}>`,
             to: visitor.email,
             subject: `Your Visitor Pass - ${visitor.passId}`,
             text: [
@@ -578,11 +730,45 @@ const sendVisitorPassEmail = async (req, res, next) => {
             ],
         });
 
+        console.log('Visitor pass email sent:', {
+            messageId: mailResult.messageId,
+            recipientPresent: Boolean(visitor.email),
+        });
+
         return res.status(200).json({
+            success: true,
             message: `Visitor pass sent to ${visitor.email}.`,
         });
     } catch (error) {
-        console.error('Send visitor pass email error:', error.message);
+        console.error('Send visitor pass email error:', {
+            name: error.name,
+            code: error.code,
+            message: error.message,
+            command: error.command,
+            responseCode: error.responseCode,
+        });
+
+        if (
+            error.code === 'EAUTH' ||
+            error.responseCode === 535
+        ) {
+            return res.status(502).json({
+                message:
+                    'SMTP authentication failed. Check SMTP_USER and SMTP_PASS in Vercel.',
+            });
+        }
+
+        if (
+            error.code === 'ETIMEDOUT' ||
+            error.code === 'ECONNECTION' ||
+            error.code === 'ESOCKET'
+        ) {
+            return res.status(502).json({
+                message:
+                    'Could not connect to the SMTP server. Check SMTP_HOST, SMTP_PORT and SMTP_SECURE.',
+            });
+        }
+
         return next(error);
     }
 };
