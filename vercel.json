@@ -1,10 +1,12 @@
-
 {
   "version": 2,
   "builds": [
     {
       "src": "backend/server.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": "backend/node_modules/pdfkit/**/*"
+      }
     },
     {
       "src": "frontend/package.json",
@@ -28,8 +30,8 @@
       "dest": "/frontend/favicon.svg"
     },
     {
-  "src": "/(.*)",
-  "dest": "/frontend/index.html"
-}
+      "src": "/(.*)",
+      "dest": "/frontend/index.html"
+    }
   ]
 }
